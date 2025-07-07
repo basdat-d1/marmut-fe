@@ -1,0 +1,118 @@
+"use client"
+
+import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
+import { authAPI } from '@/lib/api'
+
+interface User {
+  email: string
+  nama: string
+  gender?: number
+  tempat_lahir?: string
+  tanggal_lahir?: string
+  kota_asal?: string
+  is_verified?: boolean
+  is_artist?: boolean
+  is_songwriter?: boolean
+  is_podcaster?: boolean
+  is_premium?: boolean
+  is_label?: boolean
+  kontak?: string
+}
+
+interface AuthContextType {
+  user: User | null
+  loading: boolean
+  login: (email: string, password: string) => Promise<void>
+  logout: () => Promise<void>
+  register: (userData: any, type: 'user' | 'label') => Promise<void>
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined)
+
+export function AuthProvider({ children }: { children: ReactNode }) {
+  const [user, setUser] = useState<User | null>(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    checkAuthStatus()
+  }, [])
+
+  const checkAuthStatus = async () => {
+    try {
+      // Try to get current user info from session
+      const response = await authAPI.getCurrentUser()
+      if (response.user) {
+        setUser(response.user)
+      }
+    } catch (error) {
+      console.log('No active session')
+      setUser(null)
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const login = async (email: string, password: string) => {
+    try {
+      const response = await authAPI.login(email, password)
+      if (response.success) {
+        await checkAuthStatus() // Refresh user data
+      } else {
+        throw new Error(response.message || 'Login failed')
+      }
+    } catch (error: any) {
+      throw new Error(error.message || 'Login failed')
+    }
+  }
+
+  const logout = async () => {
+    try {
+      await authAPI.logout()
+      setUser(null)
+    } catch (error) {
+      console.error('Logout error:', error)
+      // Still clear user state even if API call fails
+      setUser(null)
+    }
+  }
+
+  const register = async (userData: any, type: 'user' | 'label') => {
+    try {
+      if (type === 'user') {
+        const response = await authAPI.registerUser(userData)
+        if (!response.success) {
+          throw new Error(response.message || 'Registration failed')
+        }
+      } else {
+        const response = await authAPI.registerLabel(userData)
+        if (!response.success) {
+          throw new Error(response.message || 'Registration failed')
+        }
+      }
+    } catch (error: any) {
+      throw new Error(error.message || 'Registration failed')
+    }
+  }
+
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+    register,
+  }
+
+  return (
+    <AuthContext.Provider value={value}>
+      {children}
+    </AuthContext.Provider>
+  )
+}
+
+export function useAuth() {
+  const context = useContext(AuthContext)
+  if (context === undefined) {
+    throw new Error('useAuth must be used within an AuthProvider')
+  }
+  return context
+} 
