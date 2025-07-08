@@ -8,23 +8,26 @@ import { Button } from '@/components/ui/button'
 import { chartAPI } from '@/lib/api'
 import { 
   BarChart3, 
-  Play, 
-  Eye, 
-  TrendingUp,
-  Music
+  TrendingUp, 
+  Music, 
+  Eye,
+  Play,
+  Calendar,
+  Users
 } from 'lucide-react'
 
 interface Chart {
   tipe: string
-  id_playlist: string
 }
 
 interface ChartSong {
-  judul_lagu: string
-  oleh: string
-  tanggal_rilis: string
-  total_plays: number
-  id_song: string
+  id: string
+  judul: string
+  artist: string
+  album?: string
+  total_play: number
+  total_download?: number
+  type?: string
 }
 
 export default function ChartPage() {
@@ -35,6 +38,7 @@ export default function ChartPage() {
   const [chartSongs, setChartSongs] = useState<ChartSong[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingSongs, setLoadingSongs] = useState(false)
+  const [error, setError] = useState('')
 
   useEffect(() => {
     if (!user) {
@@ -47,31 +51,60 @@ export default function ChartPage() {
   const loadCharts = async () => {
     try {
       const data = await chartAPI.getCharts()
-      setCharts(data.charts || [])
+      // Convert chart_types to Chart objects
+      const chartObjects = (data.chart_types || []).map((tipe: string) => ({
+        tipe: tipe
+      }))
+      setCharts(chartObjects)
     } catch (error) {
       console.error('Failed to load charts:', error)
+      setError('Failed to load charts')
     } finally {
       setLoading(false)
     }
   }
 
-  const loadChartDetail = async (chart: Chart) => {
+  const loadChartSongs = async (chart: Chart) => {
     setSelectedChart(chart)
     setLoadingSongs(true)
+
     try {
       const data = await chartAPI.getChartSongs(chart.tipe)
-      setChartSongs(data.songs || [])
+      // Handle different response formats based on chart type
+      let songs: ChartSong[] = []
+      if (data.items) {
+        songs = data.items.map((item: any) => ({
+          id: item.id,
+          judul: item.judul || item.nama,
+          artist: item.artist || item.creator || '',
+          album: item.album || item.album_title,
+          total_play: item.total_play || item.total_plays || 0,
+          total_download: item.total_download,
+          type: item.type
+        }))
+      }
+      setChartSongs(songs)
     } catch (error) {
-      console.error('Failed to load chart detail:', error)
+      console.error('Failed to load chart songs:', error)
+      setError('Failed to load chart songs')
     } finally {
       setLoadingSongs(false)
     }
   }
 
+  const handleViewSong = (songId: string) => {
+    router.push(`/song/${songId}`)
+  }
+
+  const handlePlaySong = (songId: string) => {
+    // Handle play functionality
+    console.log('Playing song:', songId)
+  }
+
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
+      day: '2-digit',
+      month: '2-digit',
       year: 'numeric'
     })
   }
@@ -98,149 +131,170 @@ export default function ChartPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Music Charts</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Chart List</h1>
           <p className="text-gray-400">Discover the most popular music</p>
         </div>
 
-        {!selectedChart ? (
-          /* Chart List */
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-6">Available Charts</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {charts.map((chart) => (
-                <Card 
-                  key={chart.tipe} 
-                  className="bg-gray-900/50 border-gray-800 hover:border-green-500/50 transition-all group"
-                >
-                  <CardHeader>
-                    <CardTitle className="flex items-center text-white group-hover:text-green-400 transition-colors">
-                      <BarChart3 className="w-5 h-5 mr-2" />
-                      {chart.tipe}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-400 mb-4">
-                      Top 20 songs based on play count
-                    </p>
-                    <Button 
-                      className="w-full btn-spotify"
-                      onClick={() => loadChartDetail(chart)}
-                    >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Chart
-                    </Button>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+        {error && (
+          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+            <p className="text-red-200">{error}</p>
           </div>
-        ) : (
-          /* Chart Detail */
+        )}
+
+        {/* Charts List */}
+        {!selectedChart && (
+          <Card className="bg-gray-900/50 border-gray-800">
+            <CardHeader>
+              <CardTitle className="text-white">Available Charts</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {charts.length === 0 ? (
+                <div className="text-center py-8">
+                  <BarChart3 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">No Charts Available</h3>
+                  <p className="text-gray-400">There are no charts available at the moment.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-800/50">
+                      <tr>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Tipe
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                      {charts.map((chart) => (
+                        <tr key={chart.tipe} className="hover:bg-gray-800/30 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="flex items-center justify-center space-x-2">
+                              <BarChart3 className="w-5 h-5 text-green-400" />
+                              <span className="text-sm font-medium text-white">{chart.tipe}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                            <Button 
+                              onClick={() => loadChartSongs(chart)}
+                              className="btn-spotify"
+                            >
+                              <Eye className="w-4 h-4 mr-2" />
+                              Lihat Daftar Lagu
+                            </Button>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Chart Detail */}
+        {selectedChart && (
           <div>
+            {/* Back Button */}
             <div className="mb-6">
               <Button 
-                variant="outline" 
-                onClick={() => setSelectedChart(null)}
-                className="mb-4 border-gray-600 text-white hover:bg-gray-800"
+                variant="ghost" 
+                onClick={() => {
+                  setSelectedChart(null)
+                  setChartSongs([])
+                }}
+                className="text-white hover:bg-gray-800"
               >
-                ← Back to Charts
+                ← Kembali
               </Button>
-              <h2 className="text-2xl font-bold text-white">{selectedChart.tipe}</h2>
-              <p className="text-gray-400">Top songs based on play count</p>
             </div>
 
-            {loadingSongs ? (
-              <div className="text-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto mb-4"></div>
-                <p className="text-gray-400">Loading chart data...</p>
-              </div>
-            ) : chartSongs.length > 0 ? (
-              <Card className="bg-gray-900/50 border-gray-800">
-                <CardContent className="p-0">
+            <Card className="bg-gray-900/50 border-gray-800">
+              <CardHeader>
+                <CardTitle className="text-white">Chart Detail</CardTitle>
+                <p className="text-gray-400">Tipe: {selectedChart.tipe}</p>
+              </CardHeader>
+              <CardContent>
+                {loadingSongs ? (
+                  <div className="text-center py-8">
+                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+                    <p className="mt-4 text-gray-400">Loading chart songs...</p>
+                  </div>
+                ) : chartSongs.length === 0 ? (
+                  <div className="text-center py-8">
+                    <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-white mb-2">No Songs in Chart</h3>
+                    <p className="text-gray-400">This chart doesn't have any songs yet.</p>
+                  </div>
+                ) : (
                   <div className="overflow-x-auto">
                     <table className="w-full">
                       <thead className="bg-gray-800/50">
                         <tr>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Rank
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            #
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Song
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            Judul Lagu
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Artist
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            Oleh
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Release Date
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            Album
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
-                            Plays
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                            Total Plays
                           </th>
-                          <th className="px-6 py-3 text-left text-xs font-medium text-gray-300 uppercase tracking-wider">
+                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
                             Actions
                           </th>
                         </tr>
                       </thead>
-                      <tbody className="divide-y divide-gray-700">
+                      <tbody className="divide-y divide-gray-800">
                         {chartSongs.map((song, index) => (
-                          <tr key={song.id_song} className="hover:bg-gray-800/50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <span className={`text-lg font-bold ${
-                                  index === 0 ? 'text-yellow-400' : 
-                                  index === 1 ? 'text-gray-300' : 
-                                  index === 2 ? 'text-amber-500' : 'text-gray-400'
-                                }`}>
-                                  #{index + 1}
-                                </span>
+                          <tr key={song.id} className="hover:bg-gray-800/30 transition-colors">
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <div className="text-sm font-bold text-white">
+                                {index + 1}
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <Music className="w-5 h-5 text-gray-400 mr-3" />
-                                <div>
-                                  <div className="text-sm font-medium text-white">
-                                    {song.judul_lagu}
-                                  </div>
-                                </div>
+                            <td className="px-6 py-4 whitespace-nowrap text-center">
+                              <div className="text-sm font-medium text-white">{song.judul}</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                              {song.artist}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                              {song.album || 'N/A'}
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                              <div className="flex items-center justify-center space-x-1">
+                                <TrendingUp className="w-4 h-4 text-green-400" />
+                                <span>{formatNumber(song.total_play)}</span>
                               </div>
                             </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-300">{song.oleh}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="text-sm text-gray-400">
-                                {formatDate(song.tanggal_rilis)}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <TrendingUp className="w-4 h-4 text-green-400 mr-2" />
-                                <span className="text-sm font-medium text-white">
-                                  {formatNumber(song.total_plays)}
-                                </span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                              <div className="flex space-x-2">
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                              <div className="flex justify-center space-x-2">
                                 <Button 
                                   size="sm" 
                                   variant="outline"
-                                  className="border-gray-600 text-white hover:bg-gray-800"
-                                  onClick={() => router.push(`/song/${song.id_song}`)}
+                                  className="border-gray-700 text-white hover:bg-gray-800"
+                                  onClick={() => handleViewSong(song.id)}
                                 >
-                                  <Eye className="w-4 h-4 mr-1" />
-                                  View
+                                  <Eye className="w-4 h-4" />
                                 </Button>
                                 <Button 
-                                  size="sm"
+                                  size="sm" 
                                   className="btn-spotify"
-                                  onClick={() => router.push(`/song/${song.id_song}`)}
+                                  onClick={() => handlePlaySong(song.id)}
                                 >
-                                  <Play className="w-4 h-4 mr-1" />
-                                  Play
+                                  <Play className="w-4 h-4" />
                                 </Button>
                               </div>
                             </td>
@@ -249,17 +303,84 @@ export default function ChartPage() {
                       </tbody>
                     </table>
                   </div>
-                </CardContent>
-              </Card>
-            ) : (
-              <Card className="bg-gray-900/50 border-gray-800">
-                <CardContent className="text-center py-12">
-                  <BarChart3 className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-white mb-2">No Chart Data</h3>
-                  <p className="text-gray-400">No songs have been played yet for this chart period.</p>
-                </CardContent>
-              </Card>
-            )}
+                )}
+              </CardContent>
+            </Card>
+          </div>
+        )}
+
+        {/* Chart Information */}
+        {!selectedChart && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            {/* Chart Stats */}
+            <Card className="bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-500/30">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <BarChart3 className="w-5 h-5 mr-2 text-green-400" />
+                  Chart Statistics
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-green-500/10 rounded-lg">
+                    <div className="flex items-center">
+                      <TrendingUp className="w-4 h-4 text-green-400 mr-2" />
+                      <span className="text-white">Total Charts</span>
+                    </div>
+                    <span className="text-green-400 font-bold">{charts.length}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-blue-500/10 rounded-lg">
+                    <div className="flex items-center">
+                      <Music className="w-4 h-4 text-blue-400 mr-2" />
+                      <span className="text-white">Update Frequency</span>
+                    </div>
+                    <span className="text-blue-400 font-bold">Real-time</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Chart Types */}
+            <Card className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 border-purple-500/30">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <TrendingUp className="w-5 h-5 mr-2 text-purple-400" />
+                  Chart Types
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-center p-3 bg-purple-500/10 rounded-lg">
+                    <div className="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
+                    <div>
+                      <h4 className="text-white font-medium">Daily Top 20</h4>
+                      <p className="text-gray-400 text-sm">24-hour trending songs</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center p-3 bg-purple-500/10 rounded-lg">
+                    <div className="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
+                    <div>
+                      <h4 className="text-white font-medium">Weekly Top 20</h4>
+                      <p className="text-gray-400 text-sm">7-day popular tracks</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center p-3 bg-purple-500/10 rounded-lg">
+                    <div className="w-3 h-3 bg-yellow-400 rounded-full mr-3"></div>
+                    <div>
+                      <h4 className="text-white font-medium">Monthly Top 20</h4>
+                      <p className="text-gray-400 text-sm">30-day popular tracks</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center p-3 bg-purple-500/10 rounded-lg">
+                    <div className="w-3 h-3 bg-red-400 rounded-full mr-3"></div>
+                    <div>
+                      <h4 className="text-white font-medium">Yearly Top 20</h4>
+                      <p className="text-gray-400 text-sm">365-day popular tracks</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
           </div>
         )}
       </div>

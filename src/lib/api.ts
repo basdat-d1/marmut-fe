@@ -7,7 +7,7 @@ async function getCSRFToken() {
     })
     if (response.ok) {
       const data = await response.json()
-      return data.csrf_token
+      return data.csrfToken
     }
   } catch (error) {
     console.warn('Failed to get CSRF token:', error)
@@ -35,8 +35,26 @@ async function apiRequest(url: string, options: RequestInit = {}) {
   const response = await fetch(`${BASE_URL}${url}`, config)
   
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}))
-    throw new Error(errorData.message || `HTTP error! status: ${response.status}`)
+    let errorMessage = `HTTP error! status: ${response.status}`
+    try {
+      const errorData = await response.json()
+      errorMessage = errorData.message || errorData.detail || errorMessage
+    } catch {
+      // If response is not JSON, use default message
+    }
+    
+    // Handle specific status codes
+    if (response.status === 401) {
+      errorMessage = 'Authentication required. Please log in again.'
+    } else if (response.status === 403) {
+      errorMessage = 'Access denied. You do not have permission to perform this action.'
+    } else if (response.status === 404) {
+      errorMessage = 'Resource not found.'
+    } else if (response.status === 400) {
+      errorMessage = 'Bad request. Please check your input.'
+    }
+    
+    throw new Error(errorMessage)
   }
 
   const contentType = response.headers.get('content-type')
@@ -49,19 +67,14 @@ async function apiRequest(url: string, options: RequestInit = {}) {
 // Authentication API
 export const authAPI = {
   async login(email: string, password: string) {
-    const formData = new FormData()
-    formData.append('email', email)
-    formData.append('password', password)
-
-    return apiRequest('/login/', {
+    return apiRequest('/api/auth/login/', {
       method: 'POST',
-      headers: {},
-      body: formData,
+      body: JSON.stringify({ email, password }),
     })
   },
 
   async logout() {
-    return apiRequest('/logout/', {
+    return apiRequest('/api/auth/logout/', {
       method: 'POST',
     })
   },
@@ -70,25 +83,15 @@ export const authAPI = {
     email: string
     password: string
     nama: string
-    gender: string
+    gender: number
     tempat_lahir: string
     tanggal_lahir: string
     kota_asal: string
-    role?: string[]
+    roles?: string[]
   }) {
-    const formData = new FormData()
-    Object.entries(userData).forEach(([key, value]) => {
-      if (key === 'role' && Array.isArray(value)) {
-        value.forEach(role => formData.append('role', role))
-      } else {
-        formData.append(key, value as string)
-      }
-    })
-
-    return apiRequest('/register/pengguna/', {
+    return apiRequest('/api/auth/register/user/', {
       method: 'POST',
-      headers: {},
-      body: formData,
+      body: JSON.stringify(userData),
     })
   },
 
@@ -98,330 +101,357 @@ export const authAPI = {
     nama: string
     kontak: string
   }) {
-    const formData = new FormData()
-    Object.entries(labelData).forEach(([key, value]) => {
-      formData.append(key, value)
-    })
-
-    return apiRequest('/register/label/', {
+    return apiRequest('/api/auth/register/label/', {
       method: 'POST',
-      headers: {},
-      body: formData,
+      body: JSON.stringify(labelData),
     })
   },
 
   async getCurrentUser() {
-    return apiRequest('/dashboard/pengguna/')
+    return apiRequest('/api/auth/me/')
   },
 }
 
 // Dashboard API
 export const dashboardAPI = {
   async getUserProfile() {
-    return apiRequest('/dashboard/pengguna/')
+    return apiRequest('/api/dashboard/')
   },
 
   async getLabelProfile() {
-    return apiRequest('/dashboard/label/')
+    return apiRequest('/api/dashboard/')
+  },
+
+  async getUserStats() {
+    return apiRequest('/api/dashboard/stats/')
   },
 }
 
 // Playlist API
 export const playlistAPI = {
   async getUserPlaylists() {
-    return apiRequest('/user-playlist/')
+    return apiRequest('/api/user-playlist/')
   },
 
   async createPlaylist(playlistData: { judul: string; deskripsi: string }) {
-    const formData = new FormData()
-    Object.entries(playlistData).forEach(([key, value]) => {
-      formData.append(key, value)
-    })
-
-    return apiRequest('/user-playlist/tambah-playlist/', {
+    return apiRequest('/api/user-playlist/create/', {
       method: 'POST',
-      headers: {},
-      body: formData,
+      body: JSON.stringify(playlistData),
     })
   },
 
-  async updatePlaylist(playlistId: string, playlistData: { judul: string; deskripsi: string }) {
-    const formData = new FormData()
-    Object.entries(playlistData).forEach(([key, value]) => {
-      formData.append(key, value)
-    })
+  async getPlaylistDetail(playlistId: string) {
+    return apiRequest(`/api/user-playlist/${playlistId}/`)
+  },
 
-    return apiRequest(`/user-playlist/ubah-playlist/${playlistId}/`, {
-      method: 'POST',
-      headers: {},
-      body: formData,
+  async updatePlaylist(playlistId: string, playlistData: { judul: string; deskripsi: string }) {
+    return apiRequest(`/api/user-playlist/${playlistId}/update/`, {
+      method: 'PUT',
+      body: JSON.stringify(playlistData),
     })
   },
 
   async deletePlaylist(playlistId: string) {
-    return apiRequest(`/user-playlist/hapus-playlist/${playlistId}/`, {
-      method: 'POST',
+    return apiRequest(`/api/user-playlist/${playlistId}/delete/`, {
+      method: 'DELETE',
     })
   },
 
   async getPlaylistSongs(playlistId: string) {
-    return apiRequest(`/user-playlist/detail-playlist/${playlistId}/`)
+    return apiRequest(`/api/user-playlist/${playlistId}/`)
   },
 
   async addSongToPlaylist(playlistId: string, songId: string) {
-    const formData = new FormData()
-    formData.append('id_song', songId)
-
-    return apiRequest(`/user-playlist/tambah-lagu/${playlistId}/`, {
+    return apiRequest(`/api/user-playlist/${playlistId}/add-song/`, {
       method: 'POST',
-      headers: {},
-      body: formData,
+      body: JSON.stringify({ song_id: songId }),
     })
   },
 
   async removeSongFromPlaylist(playlistId: string, songId: string) {
-    return apiRequest(`/user-playlist/hapus-lagu/${playlistId}/${songId}/`, {
+    return apiRequest(`/api/user-playlist/${playlistId}/remove-song/${songId}/`, {
+      method: 'DELETE',
+    })
+  },
+
+  async playPlaylist(playlistId: string) {
+    return apiRequest(`/api/play-user-playlist/${playlistId}/`, {
       method: 'POST',
     })
   },
 
-  async playPlaylist(playlistId: string, creatorEmail: string) {
-    const formData = new FormData()
-    formData.append('id_user_playlist', playlistId)
-    formData.append('email_pembuat', creatorEmail)
-
-    return apiRequest(`/play-user-playlist/${playlistId}`, {
-      method: 'POST',
-      headers: {},
-      body: formData,
-    })
+  async getAvailableSongs() {
+    return apiRequest('/api/album-song/songs/')
   },
 }
 
 // Album API
 export const albumAPI = {
   async getUserAlbums() {
-    return apiRequest('/daftar-album-song/list-album/')
+    return apiRequest('/api/album-song/albums/')
+  },
+
+  async getAlbumDetail(albumId: string) {
+    return apiRequest(`/api/album-song/albums/${albumId}/`)
   },
 
   async createAlbum(albumData: { judul: string; label: string }) {
-    const formData = new FormData()
-    Object.entries(albumData).forEach(([key, value]) => {
-      formData.append(key, value)
-    })
-
-    return apiRequest('/daftar-album-song/create-album/', {
+    return apiRequest('/api/album-song/albums/', {
       method: 'POST',
-      headers: {},
-      body: formData,
+      body: JSON.stringify(albumData),
     })
   },
 
   async deleteAlbum(albumId: string) {
-    const formData = new FormData()
-    formData.append('id_album', albumId)
-
-    return apiRequest('/daftar-album-song/list-album/delete-album/', {
-      method: 'POST',
-      headers: {},
-      body: formData,
-    })
-  },
-
-  async addSong(albumId: string, songData: { judul: string; durasi: number }) {
-    const formData = new FormData()
-    formData.append('id_album', albumId)
-    Object.entries(songData).forEach(([key, value]) => {
-      formData.append(key, value.toString())
-    })
-
-    return apiRequest('/daftar-album-song/list-album/create-song/', {
-      method: 'POST',
-      headers: {},
-      body: formData,
+    return apiRequest(`/api/album-song/albums/${albumId}/`, {
+      method: 'DELETE',
     })
   },
 
   async getAlbumSongs(albumId: string) {
-    return apiRequest(`/daftar-album-song/list-album/list-song/?id_album=${albumId}`)
+    return apiRequest(`/api/album-song/albums/${albumId}/`)
+  },
+
+  async addSongToAlbum(albumId: string, songData: { judul: string; durasi: number }) {
+    return apiRequest(`/api/album-song/albums/${albumId}/songs/`, {
+      method: 'POST',
+      body: JSON.stringify(songData),
+    })
+  },
+
+  async addSong(albumId: string, songData: { judul: string; durasi: number }) {
+    return apiRequest(`/api/album-song/albums/${albumId}/songs/`, {
+      method: 'POST',
+      body: JSON.stringify(songData),
+    })
+  },
+
+  async deleteSong(songId: string) {
+    return apiRequest(`/api/album-song/songs/${songId}/`, {
+      method: 'DELETE',
+    })
+  },
+
+  async getPopularSongs() {
+    return apiRequest('/api/album-song/songs/popular/')
+  },
+
+  async getNewReleases() {
+    return apiRequest('/api/album-song/songs/new/')
+  },
+
+  async getAllSongs() {
+    return apiRequest('/api/album-song/songs/')
+  },
+
+  async getAllAlbums() {
+    return apiRequest('/api/album-song/albums/')
   },
 
   async getLabelAlbums() {
-    return apiRequest('/daftar-album-song/list-album/label/')
+    return apiRequest('/api/album-song/albums/')
   },
 }
 
 // Podcast API
 export const podcastAPI = {
   async getUserPodcasts() {
-    return apiRequest('/podcast/')
+    return apiRequest('/api/podcast/')
   },
 
-  async createPodcast(podcastData: { judul: string; genre: string[] }) {
-    const formData = new FormData()
-    formData.append('judul', podcastData.judul)
-    podcastData.genre.forEach(g => formData.append('genre', g))
-
-    return apiRequest('/podcast/add-podcast/', {
+  async createPodcast(podcastData: { judul: string; deskripsi: string; genres: string[] }) {
+    return apiRequest('/api/podcast/create/', {
       method: 'POST',
-      headers: {},
-      body: formData,
+      body: JSON.stringify(podcastData),
     })
   },
 
   async deletePodcast(podcastId: string) {
-    const formData = new FormData()
-    formData.append('podcast_id', podcastId)
-
-    return apiRequest('/podcast/remove-podcast/', {
-      method: 'POST',
-      headers: {},
-      body: formData,
+    return apiRequest(`/api/podcast/${podcastId}/delete/`, {
+      method: 'DELETE',
     })
   },
 
   async getPodcastEpisodes(podcastId: string) {
-    return apiRequest(`/podcast/daftar-episode/?podcast_id=${podcastId}`)
+    return apiRequest(`/api/podcast/${podcastId}/episodes/`)
   },
 
-  async createEpisode(episodeData: { 
-    id_konten_podcast: string
-    judul: string
-    deskripsi: string
-    durasi: number 
-  }) {
-    const formData = new FormData()
-    Object.entries(episodeData).forEach(([key, value]) => {
-      formData.append(key, value.toString())
-    })
-
-    return apiRequest('/podcast/add-episode/', {
+  async createEpisode(episodeData: { id_konten_podcast: string; judul: string; deskripsi: string; durasi: number }) {
+    // Extract podcast ID from episode data
+    const podcastId = episodeData.id_konten_podcast
+    return apiRequest(`/api/podcast/${podcastId}/episodes/create/`, {
       method: 'POST',
-      headers: {},
-      body: formData,
+      body: JSON.stringify(episodeData),
     })
   },
 
   async deleteEpisode(episodeId: string) {
-    const formData = new FormData()
-    formData.append('episode_id', episodeId)
-
-    return apiRequest('/podcast/remove-episode/', {
-      method: 'POST',
-      headers: {},
-      body: formData,
+    // For now, we'll need to pass both podcast ID and episode ID
+    // This is a temporary solution - the backend should be updated to handle episode deletion by episode ID only
+    return apiRequest(`/api/podcast/episodes/${episodeId}/delete/`, {
+      method: 'DELETE',
     })
   },
 
   async getPodcastDetail(podcastId: string) {
-    return apiRequest(`/play-podcast/?podcast_id=${podcastId}`)
+    return apiRequest(`/api/play-podcast/${podcastId}/`)
+  },
+
+  async getAllPodcasts() {
+    return apiRequest('/api/play-podcast/')
+  },
+
+  async playPodcastEpisode(podcastId: string, episodeId: string) {
+    return apiRequest(`/api/play-podcast/${podcastId}/episodes/${episodeId}/play/`, {
+      method: 'POST',
+    })
+  },
+
+  async getAvailableGenres() {
+    return apiRequest('/api/podcast/genres/')
   },
 }
 
 // Chart API
 export const chartAPI = {
   async getCharts() {
-    return apiRequest('/lihat-chart/')
+    return apiRequest('/api/chart/')
+  },
+
+  async getChartDetail(chartType: string) {
+    return apiRequest(`/api/chart/${encodeURIComponent(chartType)}/`)
+  },
+
+  async getTrendingSongs() {
+    return apiRequest('/api/chart/trending/songs/')
+  },
+
+  async getTopDownloads() {
+    return apiRequest('/api/chart/top/downloads/')
   },
 
   async getChartSongs(chartType: string) {
-    return apiRequest(`/lihat-chart/isi-chart/?tipe=${encodeURIComponent(chartType)}`)
+    return apiRequest(`/api/chart/${encodeURIComponent(chartType)}/`)
   },
 }
 
 // Downloaded Songs API
 export const downloadedSongsAPI = {
   async getDownloadedSongs() {
-    return apiRequest('/downloaded-songs/api/get_downloaded_songs/')
+    return apiRequest('/api/downloads/')
   },
 
   async removeDownloadedSong(songId: string) {
-    return apiRequest(`/downloaded-songs/delete-song/${songId}/`, {
-      method: 'POST',
+    return apiRequest(`/api/downloads/${songId}/remove/`, {
+      method: 'DELETE',
     })
+  },
+
+  async getDownloadStats() {
+    return apiRequest('/api/downloads/stats/')
   },
 }
 
 // Royalty API
 export const royaltyAPI = {
   async getRoyalties() {
-    return apiRequest('/cek-royalti/')
+    return apiRequest('/api/royalty/')
   },
 
   async getLabelRoyalties() {
-    return apiRequest('/cek-royalti/label/')
+    return apiRequest('/api/royalty/label/')
   },
 }
 
 // Search API
 export const searchAPI = {
   async search(query: string) {
-    return apiRequest(`/search-bar/?query=${encodeURIComponent(query)}`)
+    return apiRequest(`/api/search/?q=${encodeURIComponent(query)}`)
   },
 
-  async getItemDetail(itemId: string) {
-    return apiRequest(`/search-bar/detail/${itemId}/`)
+  async searchSongs(query: string) {
+    return apiRequest(`/api/search/songs/?q=${encodeURIComponent(query)}`)
+  },
+
+  async searchPodcasts(query: string) {
+    return apiRequest(`/api/search/podcasts/?q=${encodeURIComponent(query)}`)
+  },
+
+  async searchPlaylists(query: string) {
+    return apiRequest(`/api/search/playlists/?q=${encodeURIComponent(query)}`)
+  },
+
+  async getItemDetail(itemId: string, type: string = 'song') {
+    return apiRequest(`/api/search/item/${itemId}/?type=${type}`)
   },
 }
 
 // Song API
 export const songAPI = {
   async getSong(songId: string) {
-    return apiRequest(`/play-song/${songId}/`)
+    return apiRequest(`/api/play-song/${songId}/`)
   },
 
-  async playSong(songId: string, progress: number) {
-    const formData = new FormData()
-    formData.append('progress', progress.toString())
-
-    return apiRequest(`/play-song/${songId}/`, {
+  async playSong(songId: string, progress: number = 0) {
+    return apiRequest(`/api/play-song/${songId}/`, {
       method: 'POST',
-      headers: {},
-      body: formData,
+      body: JSON.stringify({ progress }),
     })
   },
 
   async downloadSong(songId: string) {
-    return apiRequest(`/play-song/download_song/${songId}/`, {
+    return apiRequest(`/api/play-song/${songId}/download/`, {
       method: 'POST',
     })
   },
 
   async addToPlaylist(songId: string, playlistId: string) {
-    const formData = new FormData()
-    formData.append('id_user_playlist', playlistId)
-
-    return apiRequest(`/play-song/add_song_to_user_playlist/${songId}/`, {
+    return apiRequest(`/api/play-song/${songId}/add-to-playlist/`, {
       method: 'POST',
-      headers: {},
-      body: formData,
+      body: JSON.stringify({ playlist_id: playlistId }),
     })
+  },
+
+  async getUserPlaylistsForSong() {
+    return apiRequest('/api/play-song/playlists/')
   },
 }
 
 // Subscription API
 export const subscriptionAPI = {
-  async getSubscriptions() {
-    return apiRequest('/langganan-paket/')
+  async getPackages() {
+    return apiRequest('/api/subscription/packages/')
+  },
+
+  async getCurrentSubscription() {
+    return apiRequest('/api/subscription/')
   },
 
   async subscribe(packageData: { 
     jenis_paket: string
     metode_bayar: string 
   }) {
-    const formData = new FormData()
-    Object.entries(packageData).forEach(([key, value]) => {
-      formData.append(key, value)
-    })
-
-    return apiRequest('/langganan-paket/beli-paket/', {
+    return apiRequest('/api/subscription/subscribe/', {
       method: 'POST',
-      headers: {},
-      body: formData,
+      body: JSON.stringify(packageData),
     })
   },
 
+  async cancelSubscription() {
+    return apiRequest('/api/subscription/cancel/', {
+      method: 'POST',
+    })
+  },
+
+  async getSubscriptionHistory() {
+    return apiRequest('/api/subscription/history/')
+  },
+
+  async getSubscriptions() {
+    return apiRequest('/api/subscription/packages/')
+  },
+
   async getTransactionHistory() {
-    return apiRequest('/langganan-paket/riwayat-transaksi/')
+    return apiRequest('/api/subscription/history/')
   },
 } 

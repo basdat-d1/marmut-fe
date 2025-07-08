@@ -7,31 +7,32 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { podcastAPI } from '@/lib/api'
 import { 
-  ArrowLeft, 
-  Mic, 
-  Clock, 
+  ArrowLeft,
+  Mic,
+  User,
   Calendar,
-  Play,
-  Trash2,
-  Plus
+  Clock,
+  Tag,
+  Play
 } from 'lucide-react'
 
-interface Podcast {
-  id_konten: string
-  judul: string
-  durasi: number
-  tanggal_rilis: string
-  tahun: number
-  podcaster: string
-  genres: string[]
-}
-
 interface Episode {
-  id_episode: string
+  id: string
   judul: string
   deskripsi: string
-  durasi: number
+  durasi: string
   tanggal_rilis: string
+}
+
+interface Podcast {
+  id: string
+  judul: string
+  genres: string[]
+  podcaster: string
+  total_durasi: string
+  tanggal_rilis: string
+  tahun: number
+  episodes: Episode[]
 }
 
 export default function PodcastDetailPage() {
@@ -39,9 +40,8 @@ export default function PodcastDetailPage() {
   const router = useRouter()
   const params = useParams()
   const podcastId = params.id as string
-
+  
   const [podcast, setPodcast] = useState<Podcast | null>(null)
-  const [episodes, setEpisodes] = useState<Episode[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
 
@@ -56,40 +56,44 @@ export default function PodcastDetailPage() {
   const loadPodcastData = async () => {
     try {
       const data = await podcastAPI.getPodcastDetail(podcastId)
-      setPodcast(data.podcast)
-      setEpisodes(data.episodes || [])
+      // Combine podcast and episodes data
+      const podcastData = {
+        ...data.podcast,
+        episodes: data.episodes || []
+      }
+      setPodcast(podcastData)
     } catch (error) {
       console.error('Failed to load podcast data:', error)
-      setError('Failed to load podcast information')
+      setError('Failed to load podcast data')
     } finally {
       setLoading(false)
     }
   }
 
-  const handleDeleteEpisode = async (episodeId: string) => {
-    if (!confirm('Are you sure you want to delete this episode?')) return
-
+  const handlePlayEpisode = async (episodeId: string) => {
     try {
-      await podcastAPI.deleteEpisode(episodeId)
-      setEpisodes(prev => prev.filter(episode => episode.id_episode !== episodeId))
+      await podcastAPI.playPodcastEpisode(podcastId, episodeId)
+      console.log('Playing episode:', episodeId)
     } catch (error: any) {
-      setError(error.message || 'Failed to delete episode')
+      setError(error.message || 'Failed to play episode')
     }
   }
 
-  const formatDuration = (minutes: number) => {
-    if (minutes < 60) return `${minutes} min`
-    const hours = Math.floor(minutes / 60)
-    const remainingMinutes = minutes % 60
-    return `${hours}h ${remainingMinutes}m`
-  }
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
     })
+  }
+
+  const formatDuration = (duration: string) => {
+    // Assuming duration is in minutes, convert to hours and minutes format
+    const minutes = parseInt(duration)
+    if (minutes < 60) return `${minutes} menit`
+    const hours = Math.floor(minutes / 60)
+    const remainingMinutes = minutes % 60
+    return `${hours} jam ${remainingMinutes} menit`
   }
 
   if (loading) {
@@ -106,35 +110,32 @@ export default function PodcastDetailPage() {
   if (!podcast) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
-        <Card className="bg-gray-900/50 border-gray-800">
-          <CardContent className="text-center py-12">
-            <Mic className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">Podcast Not Found</h3>
-            <p className="text-gray-400 mb-4">The podcast you're looking for doesn't exist.</p>
-            <Button 
-              onClick={() => router.back()}
-              className="btn-spotify"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Go Back
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-400 mb-4">Error</h1>
+          <p className="text-gray-400 mb-4">{error || 'Podcast not found'}</p>
+          <Button 
+            onClick={() => router.push('/search')}
+            className="btn-spotify"
+          >
+            Back to Search
+          </Button>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-4xl mx-auto">
+        {/* Header */}
         <div className="mb-6">
           <Button 
-            variant="outline" 
+            variant="ghost" 
             onClick={() => router.back()}
-            className="border-gray-600 text-white hover:bg-gray-800"
+            className="text-white hover:bg-gray-800 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
+            Kembali
           </Button>
         </div>
 
@@ -147,133 +148,108 @@ export default function PodcastDetailPage() {
         {/* Podcast Information */}
         <Card className="mb-6 bg-gray-900/50 border-gray-800">
           <CardHeader>
-            <CardTitle className="text-2xl text-white">{podcast.judul}</CardTitle>
+            <CardTitle className="text-white text-2xl">{podcast.judul}</CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="space-y-4">
-                <div className="flex items-center">
-                  <Mic className="w-5 h-5 text-gray-400 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-400">Podcaster</p>
-                    <p className="font-medium text-white">{podcast.podcaster}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Clock className="w-5 h-5 text-gray-400 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-400">Total Duration</p>
-                    <p className="font-medium text-white">{formatDuration(podcast.durasi)}</p>
-                  </div>
-                </div>
-
-                <div className="flex items-center">
-                  <Calendar className="w-5 h-5 text-gray-400 mr-3" />
-                  <div>
-                    <p className="text-sm text-gray-400">Release Date</p>
-                    <p className="font-medium text-white">{formatDate(podcast.tanggal_rilis)}</p>
-                  </div>
-                </div>
-              </div>
-
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <p className="text-sm text-gray-400 mb-2">Genres</p>
-                <div className="flex flex-wrap gap-2">
+                <label className="text-sm font-medium text-gray-400">Genre(s):</label>
+                <div className="flex flex-wrap gap-2 mt-1">
                   {podcast.genres.map((genre, index) => (
-                    <span key={index} className="px-3 py-1 bg-purple-500/20 text-purple-400 rounded-full text-sm">
+                    <span key={index} className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs">
                       {genre}
                     </span>
                   ))}
                 </div>
               </div>
+              <div>
+                <label className="text-sm font-medium text-gray-400">Podcaster:</label>
+                <p className="text-white">{podcast.podcaster}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-400">Total Durasi:</label>
+                <p className="text-white">{formatDuration(podcast.total_durasi)}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-400">Tanggal Rilis:</label>
+                <p className="text-white">{formatDate(podcast.tanggal_rilis)}</p>
+              </div>
+              <div>
+                <label className="text-sm font-medium text-gray-400">Tahun:</label>
+                <p className="text-white">{podcast.tahun}</p>
+              </div>
             </div>
           </CardContent>
         </Card>
 
-        {/* Episodes */}
-        <div className="mb-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-white">Episodes</h2>
-            {user?.is_podcaster && (
-              <Button 
-                onClick={() => router.push(`/podcast`)}
-                className="btn-spotify"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Manage Episodes
-              </Button>
-            )}
-          </div>
-
-          {episodes.length === 0 ? (
-            <Card className="bg-gray-900/50 border-gray-800">
-              <CardContent className="text-center py-12">
-                <Mic className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-white mb-2">No Episodes</h3>
-                <p className="text-gray-400 mb-4">This podcast doesn't have any episodes yet.</p>
-                {user?.is_podcaster && (
-                  <Button 
-                    onClick={() => router.push(`/podcast`)}
-                    className="btn-spotify"
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add First Episode
-                  </Button>
-                )}
-              </CardContent>
-            </Card>
-          ) : (
-            <div className="space-y-4">
-              {episodes.map((episode, index) => (
-                <Card key={episode.id_episode} className="bg-gray-900/50 border-gray-800 hover:border-green-500/50 transition-all">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-start space-x-4 flex-1">
-                        <div className="w-12 h-12 bg-gradient-to-br from-purple-600 to-purple-800 rounded-lg flex items-center justify-center text-white font-bold">
-                          {index + 1}
-                        </div>
-                        <div className="flex-1">
-                          <h3 className="text-lg font-semibold text-white mb-2">{episode.judul}</h3>
-                          <p className="text-gray-400 mb-3">{episode.deskripsi}</p>
-                          <div className="flex items-center space-x-4 text-sm text-gray-400">
-                            <div className="flex items-center">
-                              <Clock className="w-4 h-4 mr-1" />
-                              {formatDuration(episode.durasi)}
-                            </div>
-                            <div className="flex items-center">
-                              <Calendar className="w-4 h-4 mr-1" />
-                              {formatDate(episode.tanggal_rilis)}
-                            </div>
+        {/* Episodes List */}
+        <Card className="bg-gray-900/50 border-gray-800">
+          <CardHeader>
+            <CardTitle className="text-white">Daftar Episode</CardTitle>
+          </CardHeader>
+          <CardContent>
+            {podcast.episodes.length === 0 ? (
+              <div className="text-center py-8">
+                <Mic className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-white mb-2">No Episodes Yet</h3>
+                <p className="text-gray-400">This podcast doesn't have any episodes yet.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-800/50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Judul Episode
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Deskripsi
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Durasi
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Tanggal
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800">
+                    {podcast.episodes.map((episode) => (
+                      <tr key={episode.id} className="hover:bg-gray-800/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-white">{episode.judul}</div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="text-sm text-gray-300 max-w-xs truncate">
+                            {episode.deskripsi}
                           </div>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-2">
-                        <Button 
-                          size="sm" 
-                          className="btn-spotify"
-                        >
-                          <Play className="w-4 h-4 mr-1" />
-                          Play
-                        </Button>
-                        {user?.is_podcaster && (
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {formatDuration(episode.durasi)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {formatDate(episode.tanggal_rilis)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <Button 
                             size="sm" 
-                            variant="outline"
-                            className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
-                            onClick={() => handleDeleteEpisode(episode.id_episode)}
+                            className="btn-spotify"
+                            onClick={() => handlePlayEpisode(episode.id)}
                           >
-                            <Trash2 className="w-4 h-4" />
+                            <Play className="w-4 h-4" />
                           </Button>
-                        )}
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          )}
-        </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
     </div>
   )

@@ -27,7 +27,7 @@ export function formatDuration(minutes: number): string {
   return `${hours}h ${remainingMinutes}m`
 }
 
-export function debounce<T extends (...args: any[]) => void>(
+export function debounce<T extends (...args: unknown[]) => void>(
   func: T,
   delay: number
 ): (...args: Parameters<T>) => void {

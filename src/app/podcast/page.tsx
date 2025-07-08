@@ -89,13 +89,14 @@ export default function PodcastPage() {
     try {
       await podcastAPI.createPodcast({
         judul: createForm.judul,
-        genre: createForm.genres
+        deskripsi: '',
+        genres: createForm.genres
       })
       setCreateForm({ judul: '', genres: [] })
       setShowCreateForm(false)
       loadPodcasts()
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to create podcast')
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to create podcast')
     }
   }
 
@@ -113,8 +114,8 @@ export default function PodcastPage() {
       setShowEpisodeForm(false)
       setSelectedPodcast(null)
       loadPodcasts()
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to add episode')
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to add episode')
     }
   }
 
@@ -124,8 +125,8 @@ export default function PodcastPage() {
     try {
       await podcastAPI.deletePodcast(podcastId)
       loadPodcasts()
-    } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to delete podcast')
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to delete podcast')
     }
   }
 

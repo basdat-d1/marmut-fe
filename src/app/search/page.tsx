@@ -1,277 +1,337 @@
 "use client"
 
-import { useState, useEffect, Suspense } from 'react'
+import { useState } from 'react'
 import { useAuth } from '@/contexts/AuthContext'
-import { useRouter, useSearchParams } from 'next/navigation'
-import { Card, CardContent } from '@/components/ui/card'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { searchAPI } from '@/lib/api'
 import { 
-  Search as SearchIcon, 
+  Search, 
   Music, 
   Mic, 
-  Library, 
-  Eye
+  Library,
+  Eye,
+  Play
 } from 'lucide-react'
 
 interface SearchResult {
-  type: 'SONG' | 'PODCAST' | 'USER_PLAYLIST'
+  id: string
   judul: string
   oleh: string
-  id: string
+  tipe: 'SONG' | 'PODCAST' | 'USER_PLAYLIST'
+  artist_nama?: string
+  podcaster_nama?: string
+  pembuat_nama?: string
+  durasi?: number
+  jumlah_lagu?: number
+  total_durasi?: string
 }
 
-function SearchForm({ onSearch, loading, query, setQuery }: {
-  onSearch: (e: React.FormEvent) => void
-  loading: boolean
-  query: string
-  setQuery: (value: string) => void
-}) {
-  return (
-    <Card className="card-spotify mb-6">
-      <CardContent className="pt-6">
-        <form onSubmit={onSearch} className="flex space-x-2">
-          <div className="flex-1 relative">
-            <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
-            <Input
-              type="text"
-              placeholder="Search for songs, podcasts, or playlists..."
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              className="pl-10 form-input"
-            />
-          </div>
-          <Button type="submit" disabled={loading} className="btn-spotify">
-            {loading ? (
-              <div className="loading-spinner"></div>
-            ) : (
-              <>
-                <SearchIcon className="w-4 h-4 mr-2" />
-                Search
-              </>
-            )}
-          </Button>
-        </form>
-      </CardContent>
-    </Card>
-  )
+interface SearchResponse {
+  results?: {
+    songs?: any[]
+    podcasts?: any[]
+    playlists?: any[]
+  }
 }
 
-function SearchResults({ results, query, loading }: {
-  results: SearchResult[]
-  query: string
-  loading: boolean
-}) {
-  const router = useRouter()
-
-  const getIcon = (type: string) => {
-    switch (type) {
-      case 'SONG': return Music
-      case 'PODCAST': return Mic
-      case 'USER_PLAYLIST': return Library
-      default: return Music
-    }
-  }
-
-  const getTypeColor = (type: string) => {
-    switch (type) {
-      case 'SONG': return 'text-green-500'
-      case 'PODCAST': return 'text-purple-500'
-      case 'USER_PLAYLIST': return 'text-blue-500'
-      default: return 'text-gray-500'
-    }
-  }
-
-  const handleView = (result: SearchResult) => {
-    switch (result.type) {
-      case 'SONG':
-        router.push(`/song/${result.id}`)
-        break
-      case 'PODCAST':
-        router.push(`/podcast/${result.id}`)
-        break
-      case 'USER_PLAYLIST':
-        router.push(`/playlist/${result.id}`)
-        break
-    }
-  }
-
-  if (loading) {
-    return (
-      <Card className="card-spotify">
-        <CardContent className="p-6">
-          <div className="text-center py-8">
-            <div className="loading-spinner mx-auto mb-4"></div>
-            <p className="text-gray-400">Searching...</p>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  if (results.length === 0) {
-    return (
-      <Card className="card-spotify">
-        <CardContent className="p-6">
-          <div className="text-center py-8">
-            <SearchIcon className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">No Results Found</h3>
-            <p className="text-gray-400">
-              Sorry, no results found for &quot;{query}&quot;. Try different keywords.
-            </p>
-          </div>
-        </CardContent>
-      </Card>
-    )
-  }
-
-  return (
-    <Card className="card-spotify">
-      <CardContent className="p-6">
-        <h2 className="text-xl font-semibold text-white mb-4">
-          Search Results for &quot;{query}&quot;
-        </h2>
-        <div className="overflow-x-auto">
-          <table className="w-full">
-            <thead>
-              <tr className="border-b border-gray-700">
-                <th className="text-left py-3 px-4 font-medium text-gray-300">Type</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-300">Title</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-300">By</th>
-                <th className="text-left py-3 px-4 font-medium text-gray-300">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {results.map((result, index) => {
-                const IconComponent = getIcon(result.type)
-                const typeColor = getTypeColor(result.type)
-                
-                return (
-                  <tr key={index} className="table-row">
-                    <td className="py-3 px-4">
-                      <div className="flex items-center space-x-2">
-                        <IconComponent className={`w-4 h-4 ${typeColor}`} />
-                        <span className={`text-sm font-medium ${typeColor}`}>
-                          {result.type}
-                        </span>
-                      </div>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="text-white font-medium">{result.judul}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <span className="text-gray-300">{result.oleh}</span>
-                    </td>
-                    <td className="py-3 px-4">
-                      <Button 
-                        variant="outline" 
-                        size="sm"
-                        onClick={() => handleView(result)}
-                        className="hover-scale"
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        View
-                      </Button>
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      </CardContent>
-    </Card>
-  )
-}
-
-function SearchPageContent() {
+export default function SearchPage() {
   const { user } = useAuth()
   const router = useRouter()
-  const searchParams = useSearchParams()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
-  const [hasSearched, setHasSearched] = useState(false)
+  const [searched, setSearched] = useState(false)
 
-  useEffect(() => {
-    const initialQuery = searchParams.get('q') || ''
-    if (initialQuery) {
-      setQuery(initialQuery)
-      performSearch(initialQuery)
-    }
-  }, [searchParams])
+  const handleSearch = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!query.trim()) return
 
-  if (!user) {
-    router.push('/login')
-    return null
-  }
-
-  const performSearch = async (searchQuery: string) => {
     setLoading(true)
-    setHasSearched(true)
+    setSearched(true)
 
     try {
-      const data = await searchAPI.search(searchQuery)
-      setResults(data || [])
+      const data: SearchResponse = await searchAPI.search(query)
+      // Combine all results from different categories
+      const allResults = [
+        ...(data.results?.songs || []).map((song: any) => ({
+          ...song,
+          tipe: 'SONG' as const,
+          oleh: song.artist_nama || song.oleh
+        })),
+        ...(data.results?.podcasts || []).map((podcast: any) => ({
+          ...podcast,
+          tipe: 'PODCAST' as const,
+          oleh: podcast.podcaster_nama || podcast.oleh
+        })),
+        ...(data.results?.playlists || []).map((playlist: any) => ({
+          ...playlist,
+          tipe: 'USER_PLAYLIST' as const,
+          oleh: playlist.pembuat_nama || playlist.oleh
+        }))
+      ]
+      setResults(allResults)
     } catch (error) {
-      console.error('Search error:', error)
+      console.error('Search failed:', error)
       setResults([])
     } finally {
       setLoading(false)
     }
   }
 
-  const handleSearch = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!query.trim()) return
-    await performSearch(query)
+  const getTypeIcon = (type: string) => {
+    switch (type) {
+      case 'SONG':
+        return <Music className="w-4 h-4 text-green-400" />
+      case 'PODCAST':
+        return <Mic className="w-4 h-4 text-blue-400" />
+      case 'USER_PLAYLIST':
+        return <Library className="w-4 h-4 text-purple-400" />
+      default:
+        return <Music className="w-4 h-4 text-gray-400" />
+    }
+  }
+
+  const getTypeLabel = (type: string) => {
+    switch (type) {
+      case 'SONG':
+        return 'SONG'
+      case 'PODCAST':
+        return 'PODCAST'
+      case 'USER_PLAYLIST':
+        return 'USER PLAYLIST'
+      default:
+        return type
+    }
+  }
+
+  const handleViewItem = (item: SearchResult) => {
+    switch (item.tipe) {
+      case 'SONG':
+        router.push(`/song/${item.id}`)
+        break
+      case 'PODCAST':
+        router.push(`/podcast/${item.id}`)
+        break
+      case 'USER_PLAYLIST':
+        router.push(`/playlist/${item.id}`)
+        break
+    }
+  }
+
+  const handlePlayItem = (item: SearchResult) => {
+    // Handle play functionality based on item type
+    console.log('Playing:', item)
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-white mb-2">Search</h1>
-        <p className="text-gray-400">Find songs, podcasts, and playlists</p>
-      </div>
-
-      <SearchForm 
-        onSearch={handleSearch}
-        loading={loading}
-        query={query}
-        setQuery={setQuery}
-      />
-
-      {hasSearched && (
-        <SearchResults 
-          results={results}
-          query={query}
-          loading={loading}
-        />
-      )}
-    </div>
-  )
-}
-
-export default function SearchPage() {
-  return (
-    <Suspense fallback={
-      <div className="max-w-6xl mx-auto p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Search</h1>
-          <p className="text-gray-400">Find songs, podcasts, and playlists</p>
+          <h1 className="text-3xl font-bold text-white mb-2">Search Bar</h1>
+          <p className="text-gray-400">Discover music, podcasts, and playlists</p>
         </div>
-        <Card className="card-spotify">
+
+        {/* Search Form */}
+        <Card className="mb-6 bg-gray-900/50 border-gray-800">
           <CardContent className="p-6">
-            <div className="text-center py-8">
-              <div className="loading-spinner mx-auto mb-4"></div>
-              <p className="text-gray-400">Loading search...</p>
-            </div>
+            <form onSubmit={handleSearch} className="flex space-x-4">
+              <div className="flex-1">
+                <Input
+                  type="text"
+                  placeholder="Search for songs, podcasts, or playlists..."
+                  value={query}
+                  onChange={(e) => setQuery(e.target.value)}
+                  className="bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-green-500"
+                />
+              </div>
+              <Button 
+                type="submit" 
+                disabled={loading || !query.trim()}
+                className="btn-spotify"
+              >
+                {loading ? (
+                  <div className="flex items-center">
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    Searching...
+                  </div>
+                ) : (
+                  <>
+                    <Search className="w-4 h-4 mr-2" />
+                    CARI
+                  </>
+                )}
+              </Button>
+            </form>
           </CardContent>
         </Card>
+
+        {/* Search Results */}
+        {searched && (
+          <Card className="bg-gray-900/50 border-gray-800">
+            <CardHeader>
+              <CardTitle className="text-white">
+                {loading ? 'Searching...' : `Hasil Pencarian "${query}"`}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              {loading ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+                  <p className="mt-4 text-gray-400">Searching...</p>
+                </div>
+              ) : results.length === 0 ? (
+                <div className="text-center py-8">
+                  <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">No Results Found</h3>
+                  <p className="text-gray-400">
+                    Maaf, pencarian untuk "{query}" tidak ditemukan
+                  </p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-800/50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Tipe
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Judul
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Oleh
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                      {results.map((item) => (
+                        <tr key={`${item.tipe}-${item.id}`} className="hover:bg-gray-800/30 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center space-x-2">
+                              {getTypeIcon(item.tipe)}
+                              <span className="text-sm font-medium text-white">
+                                {getTypeLabel(item.tipe)}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="text-sm font-medium text-white">{item.judul}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                            {item.oleh}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="border-gray-700 text-white hover:bg-gray-800"
+                                onClick={() => handleViewItem(item)}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                Lihat
+                              </Button>
+                              {item.tipe === 'SONG' && (
+                                <Button 
+                                  size="sm" 
+                                  className="btn-spotify"
+                                  onClick={() => handlePlayItem(item)}
+                                >
+                                  <Play className="w-4 h-4" />
+                                </Button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Quick Search Suggestions */}
+        {!searched && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Popular Searches */}
+            <Card className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 border-blue-500/30">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <Search className="w-5 h-5 mr-2 text-blue-400" />
+                  Popular Searches
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-2 gap-3">
+                  {['love', 'rock', 'jazz', 'pop', 'classical', 'electronic'].map((suggestion) => (
+                    <Button
+                      key={suggestion}
+                      variant="outline"
+                      className="border-blue-500/30 text-white hover:bg-blue-500/20 justify-start"
+                      onClick={() => {
+                        setQuery(suggestion)
+                        // Auto-search when suggestion is clicked
+                        setTimeout(() => {
+                          const form = document.querySelector('form')
+                          if (form) {
+                            form.dispatchEvent(new Event('submit', { bubbles: true }))
+                          }
+                        }, 100)
+                      }}
+                    >
+                      <Search className="w-4 h-4 mr-2" />
+                      {suggestion}
+                    </Button>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Search Tips */}
+            <Card className="bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-500/30">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center">
+                  <Search className="w-5 h-5 mr-2 text-green-400" />
+                  Search Tips
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-3">
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+                    <div>
+                      <p className="text-white text-sm font-medium">Search by title</p>
+                      <p className="text-gray-400 text-xs">Find songs, podcasts, or playlists by name</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+                    <div>
+                      <p className="text-white text-sm font-medium">Search by artist</p>
+                      <p className="text-gray-400 text-xs">Discover content from your favorite creators</p>
+                    </div>
+                  </div>
+                  <div className="flex items-start space-x-3">
+                    <div className="w-2 h-2 bg-green-400 rounded-full mt-2"></div>
+                    <div>
+                      <p className="text-white text-sm font-medium">Search by genre</p>
+                      <p className="text-gray-400 text-xs">Explore different music styles and categories</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
       </div>
-    }>
-      <SearchPageContent />
-    </Suspense>
+    </div>
   )
 } 

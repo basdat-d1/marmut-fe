@@ -5,14 +5,16 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
 import { subscriptionAPI } from '@/lib/api'
 import { 
   Package, 
-  Crown, 
   CreditCard, 
-  ArrowLeft,
+  Wallet, 
+  History,
+  Crown,
   Check,
-  Clock
+  ArrowLeft
 } from 'lucide-react'
 
 interface Package {
@@ -22,12 +24,13 @@ interface Package {
 
 interface Transaction {
   id: string
-  jenis_paket: string
-  email: string
-  timestamp_dimulai: string
-  timestamp_berakhir: string
+  jenis: string
+  tanggal_dimulai: string
+  tanggal_berakhir: string
   metode_bayar: string
   nominal: number
+  nominal_formatted: string
+  status: string
 }
 
 export default function SubscriptionPage() {
@@ -35,11 +38,12 @@ export default function SubscriptionPage() {
   const router = useRouter()
   const [packages, setPackages] = useState<Package[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
+  const [currentSubscription, setCurrentSubscription] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [showHistory, setShowHistory] = useState(false)
+  const [showPaymentForm, setShowPaymentForm] = useState(false)
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null)
   const [paymentMethod, setPaymentMethod] = useState('')
-  const [processing, setProcessing] = useState(false)
+  const [showHistory, setShowHistory] = useState(false)
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -52,14 +56,16 @@ export default function SubscriptionPage() {
 
   const loadData = async () => {
     try {
-      const [packagesData, transactionsData] = await Promise.all([
-        subscriptionAPI.getSubscriptions(),
-        subscriptionAPI.getTransactionHistory()
+      const [packagesData, subscriptionData] = await Promise.all([
+        subscriptionAPI.getPackages(),
+        subscriptionAPI.getCurrentSubscription()
       ])
+      
       setPackages(packagesData.packages || [])
-      setTransactions(transactionsData.transactions || [])
+      setCurrentSubscription(subscriptionData.subscription || null)
     } catch (error) {
       console.error('Failed to load subscription data:', error)
+      setError('Failed to load subscription data')
     } finally {
       setLoading(false)
     }
@@ -67,15 +73,12 @@ export default function SubscriptionPage() {
 
   const handleSubscribe = async (pkg: Package) => {
     setSelectedPackage(pkg)
-    setShowHistory(false)
+    setShowPaymentForm(true)
   }
 
-  const handlePayment = async (e: React.FormEvent) => {
+  const handlePaymentSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!selectedPackage || !paymentMethod) return
-
-    setProcessing(true)
-    setError('')
 
     try {
       await subscriptionAPI.subscribe({
@@ -83,13 +86,44 @@ export default function SubscriptionPage() {
         metode_bayar: paymentMethod
       })
       
-      // Refresh user data to update premium status
-      window.location.reload()
+      setShowPaymentForm(false)
+      setSelectedPackage(null)
+      setPaymentMethod('')
+      loadData() // Refresh data
+      
+      // Show success message
+      alert('Subscription successful!')
     } catch (error: any) {
-      setError(error.message || 'Failed to process subscription')
-    } finally {
-      setProcessing(false)
+      setError(error.message || 'Failed to subscribe')
     }
+  }
+
+  const handleCancelSubscription = async () => {
+    if (!confirm('Are you sure you want to cancel your subscription?')) return
+
+    try {
+      await subscriptionAPI.cancelSubscription()
+      loadData() // Refresh data
+      alert('Subscription cancelled successfully!')
+    } catch (error: any) {
+      setError(error.message || 'Failed to cancel subscription')
+    }
+  }
+
+  const loadTransactionHistory = async () => {
+    try {
+      const data = await subscriptionAPI.getTransactionHistory()
+      setTransactions(data.transactions || [])
+      setShowHistory(true)
+    } catch (error) {
+      console.error('Failed to load transaction history:', error)
+      setError('Failed to load transaction history')
+    }
+  }
+
+  const formatDate = (dateString: string) => {
+    // Handle the formatted date string from API
+    return dateString
   }
 
   const formatCurrency = (amount: number) => {
@@ -99,22 +133,12 @@ export default function SubscriptionPage() {
     }).format(amount)
   }
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
-    })
-  }
-
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-          <p className="mt-4 text-gray-400">Loading subscription options...</p>
+          <p className="mt-4 text-gray-400">Loading subscription data...</p>
         </div>
       </div>
     )
@@ -122,22 +146,10 @@ export default function SubscriptionPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-white mb-2">Subscription Packages</h1>
-              <p className="text-gray-400">Upgrade to Premium for exclusive features</p>
-            </div>
-            <Button 
-              variant="outline" 
-              onClick={() => setShowHistory(!showHistory)}
-              className="border-gray-600 text-white hover:bg-gray-800"
-            >
-              <Clock className="w-4 h-4 mr-2" />
-              {showHistory ? 'View Packages' : 'Transaction History'}
-            </Button>
-          </div>
+          <h1 className="text-3xl font-bold text-white mb-2">Langganan Paket</h1>
+          <p className="text-gray-400">Choose your subscription plan</p>
         </div>
 
         {error && (
@@ -146,162 +158,275 @@ export default function SubscriptionPage() {
           </div>
         )}
 
-        {user?.is_premium && (
-          <Card className="mb-6 bg-gradient-to-r from-yellow-500/20 to-green-500/20 border-yellow-500/50">
-            <CardContent className="p-6">
-              <div className="flex items-center">
-                <Crown className="w-8 h-8 text-yellow-400 mr-3" />
+        {/* Current Subscription Status */}
+        {currentSubscription && (
+          <Card className="mb-6 bg-gradient-to-br from-green-900/50 to-green-800/50 border-green-500/50">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Crown className="w-5 h-5 mr-2 text-yellow-400" />
+                Current Subscription
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-white">Premium Active</h3>
-                  <p className="text-gray-300">You currently have an active Premium subscription</p>
+                  <p className="text-sm text-gray-400">Plan</p>
+                  <p className="text-white font-medium">{currentSubscription.jenis}</p>
                 </div>
+                <div>
+                  <p className="text-sm text-gray-400">Valid Until</p>
+                  <p className="text-white font-medium">{formatDate(currentSubscription.timestamp_berakhir)}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-400">Payment Method</p>
+                  <p className="text-white font-medium">{currentSubscription.metode_bayar}</p>
+                </div>
+              </div>
+              <div className="mt-4 flex space-x-2">
+                <Button 
+                  onClick={handleCancelSubscription}
+                  variant="outline"
+                  className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
+                >
+                  Cancel Subscription
+                </Button>
               </div>
             </CardContent>
           </Card>
         )}
 
-        {showHistory ? (
-          /* Transaction History */
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-6">Transaction History</h2>
-            {transactions.length === 0 ? (
-              <Card className="bg-gray-900/50 border-gray-800">
-                <CardContent className="text-center py-12">
-                  <Clock className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-white mb-2">No Transactions</h3>
-                  <p className="text-gray-400">You haven't made any subscription purchases yet.</p>
-                </CardContent>
-              </Card>
-            ) : (
-              <div className="space-y-4">
-                {transactions.map((transaction) => (
-                  <Card key={transaction.id} className="bg-gray-900/50 border-gray-800">
-                    <CardContent className="p-6">
-                      <div className="flex items-center justify-between">
-                        <div>
-                          <h3 className="font-semibold text-white">{transaction.jenis_paket}</h3>
-                          <p className="text-sm text-gray-400">
-                            {formatDate(transaction.timestamp_dimulai)} - {formatDate(transaction.timestamp_berakhir)}
-                          </p>
-                          <p className="text-sm text-gray-500">
-                            Payment: {transaction.metode_bayar}
-                          </p>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-semibold text-white">
-                            {formatCurrency(transaction.nominal)}
-                          </p>
-                          <span className="inline-block px-2 py-1 text-xs bg-green-500/20 text-green-400 rounded-full">
-                            Completed
-                          </span>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            )}
-          </div>
-        ) : (
-          /* Subscription Packages */
-          <div>
-            <h2 className="text-2xl font-bold text-white mb-6">Choose Your Plan</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-              {packages.map((pkg) => (
-                <Card key={pkg.jenis} className="bg-gray-900/50 border-gray-800 hover:border-green-500/50 transition-all">
-                  <CardHeader className="text-center">
-                    <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Package className="w-8 h-8 text-white" />
+        {/* Subscription Packages */}
+        <Card className="mb-6 bg-gray-900/50 border-gray-800">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white flex items-center">
+                <Package className="w-5 h-5 mr-2 text-green-400" />
+                Available Packages
+              </CardTitle>
+              <Button 
+                onClick={loadTransactionHistory}
+                variant="outline"
+                className="border-gray-700 text-white hover:bg-gray-800"
+              >
+                <History className="w-4 h-4 mr-2" />
+                Riwayat Transaksi
+              </Button>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {packages.map((pkg, index) => (
+                <Card 
+                  key={pkg.jenis} 
+                  className={`relative overflow-hidden transition-all duration-300 hover:scale-105 ${
+                    index === 0 ? 'bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-500/50' :
+                    index === 1 ? 'bg-gradient-to-br from-blue-900/30 to-blue-800/30 border-blue-500/50' :
+                    index === 2 ? 'bg-gradient-to-br from-purple-900/30 to-purple-800/30 border-purple-500/50' :
+                    'bg-gradient-to-br from-yellow-900/30 to-yellow-800/30 border-yellow-500/50'
+                  }`}
+                >
+                  {index === 0 && (
+                    <div className="absolute top-0 right-0 bg-green-500 text-white text-xs px-2 py-1 rounded-bl-lg">
+                      POPULAR
                     </div>
-                    <CardTitle className="text-xl text-white">{pkg.jenis}</CardTitle>
+                  )}
+                  <CardHeader className="text-center pb-2">
+                    <div className="w-12 h-12 bg-gradient-to-br from-white/20 to-white/10 rounded-full flex items-center justify-center mx-auto mb-3">
+                      <Package className="w-6 h-6 text-white" />
+                    </div>
+                    <CardTitle className="text-white text-lg">{pkg.jenis}</CardTitle>
                   </CardHeader>
-                  <CardContent className="text-center">
-                    <div className="mb-6">
-                      <p className="text-3xl font-bold text-white">{formatCurrency(pkg.harga)}</p>
-                      <p className="text-gray-400">per month</p>
+                  <CardContent className="text-center pt-0">
+                    <div className="text-3xl font-bold text-white mb-2">
+                      {formatCurrency(pkg.harga)}
                     </div>
-                    <ul className="space-y-2 mb-6">
-                      <li className="flex items-center text-gray-300">
-                        <Check className="w-4 h-4 text-green-400 mr-2" />
-                        Download songs
-                      </li>
-                      <li className="flex items-center text-gray-300">
-                        <Check className="w-4 h-4 text-green-400 mr-2" />
-                        No ads
-                      </li>
-                      <li className="flex items-center text-gray-300">
-                        <Check className="w-4 h-4 text-green-400 mr-2" />
-                        Unlimited skips
-                      </li>
-                      <li className="flex items-center text-gray-300">
-                        <Check className="w-4 h-4 text-green-400 mr-2" />
-                        High quality audio
-                      </li>
-                    </ul>
+                    <div className="text-gray-300 text-sm mb-4">per month</div>
+                    
+                    {/* Features */}
+                    <div className="space-y-2 mb-6 text-left">
+                      <div className="flex items-center text-sm">
+                        <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                        <span className="text-gray-300">Ad-free listening</span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                        <span className="text-gray-300">High quality audio</span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                        <span className="text-gray-300">Offline downloads</span>
+                      </div>
+                      <div className="flex items-center text-sm">
+                        <div className="w-2 h-2 bg-green-400 rounded-full mr-2"></div>
+                        <span className="text-gray-300">Unlimited skips</span>
+                      </div>
+                    </div>
+                    
                     <Button 
                       onClick={() => handleSubscribe(pkg)}
-                      className="w-full btn-spotify"
-                      disabled={user?.is_premium}
+                      className={`w-full ${
+                        index === 0 ? 'btn-spotify' :
+                        index === 1 ? 'bg-blue-600 hover:bg-blue-700 text-white' :
+                        index === 2 ? 'bg-purple-600 hover:bg-purple-700 text-white' :
+                        'bg-yellow-600 hover:bg-yellow-700 text-white'
+                      }`}
+                      disabled={!!currentSubscription}
                     >
-                      {user?.is_premium ? 'Already Subscribed' : 'Subscribe'}
+                      {currentSubscription ? 'Already Subscribed' : 'Subscribe Now'}
                     </Button>
                   </CardContent>
                 </Card>
               ))}
             </div>
-          </div>
+          </CardContent>
+        </Card>
+
+        {/* Payment Form */}
+        {showPaymentForm && selectedPackage && (
+          <Card className="mb-6 bg-gray-900/50 border-gray-800">
+            <CardHeader>
+              <CardTitle className="text-white">Pembayaran Paket</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="mb-6">
+                <h3 className="text-lg font-medium text-white mb-4">Informasi Paket yang Ingin Dibeli:</h3>
+                <div className="bg-gray-800/50 p-4 rounded-lg">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-400">Jenis</p>
+                      <p className="text-white font-medium">{selectedPackage.jenis}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-400">Harga</p>
+                      <p className="text-white font-medium">{formatCurrency(selectedPackage.harga)}</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <form onSubmit={handlePaymentSubmit} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Metode Pembayaran
+                  </label>
+                  <select
+                    value={paymentMethod}
+                    onChange={(e) => setPaymentMethod(e.target.value)}
+                    required
+                    className="w-full p-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-green-500"
+                  >
+                    <option value="" className="bg-gray-800">Pilih metode pembayaran</option>
+                    <option value="transfer bank" className="bg-gray-800">Transfer Bank</option>
+                    <option value="kartu kredit" className="bg-gray-800">Kartu Kredit</option>
+                    <option value="e-wallet" className="bg-gray-800">E-Wallet</option>
+                  </select>
+                </div>
+
+                <div className="flex space-x-2">
+                  <Button type="submit" className="btn-spotify">
+                    Submit
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    className="border-gray-700 text-white hover:bg-gray-800"
+                    onClick={() => {
+                      setShowPaymentForm(false)
+                      setSelectedPackage(null)
+                      setPaymentMethod('')
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
         )}
 
-        {/* Payment Modal */}
-        {selectedPackage && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-            <Card className="w-full max-w-md bg-gray-900/95 border-gray-800">
-              <CardHeader>
-                <CardTitle className="text-white">Subscribe to {selectedPackage.jenis}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <form onSubmit={handlePayment} className="space-y-4">
-                  <div>
-                    <p className="text-sm text-gray-400 mb-2">Total Amount</p>
-                    <p className="text-2xl font-bold text-white">{formatCurrency(selectedPackage.harga)}</p>
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-300 mb-2">
-                      Payment Method
-                    </label>
-                    <select 
-                      value={paymentMethod}
-                      onChange={(e) => setPaymentMethod(e.target.value)}
-                      className="w-full p-2 bg-gray-800 border border-gray-700 rounded-lg text-white"
-                      required
-                    >
-                      <option value="">Select payment method</option>
-                      <option value="credit_card">Credit Card</option>
-                      <option value="bank_transfer">Bank Transfer</option>
-                      <option value="ewallet">E-Wallet</option>
-                    </select>
-                  </div>
-                  <div className="flex space-x-2">
-                    <Button 
-                      type="submit"
-                      disabled={!paymentMethod || processing}
-                      className="btn-spotify flex-1"
-                    >
-                      {processing ? 'Processing...' : 'Subscribe'}
-                    </Button>
-                    <Button 
-                      type="button"
-                      onClick={() => setSelectedPackage(null)}
-                      variant="outline"
-                      className="border-gray-600 text-white hover:bg-gray-800"
-                    >
-                      Cancel
-                    </Button>
-                  </div>
-                </form>
-              </CardContent>
-            </Card>
-          </div>
+        {/* Transaction History */}
+        {showHistory && (
+          <Card className="bg-gray-900/50 border-gray-800">
+            <CardHeader>
+              <div className="flex items-center justify-between">
+                <CardTitle className="text-white">Riwayat Transaksi Paket</CardTitle>
+                <Button 
+                  onClick={() => setShowHistory(false)}
+                  variant="outline"
+                  className="border-gray-700 text-white hover:bg-gray-800"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Kembali
+                </Button>
+              </div>
+            </CardHeader>
+            <CardContent>
+              {transactions.length === 0 ? (
+                <div className="text-center py-8">
+                  <History className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">No Transaction History</h3>
+                  <p className="text-gray-400">You haven't made any transactions yet.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-800/50">
+                      <tr>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Jenis
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Tanggal Dimulai
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Tanggal Berakhir
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Metode Pembayaran
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Nominal
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Status
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                      {transactions.map((transaction, index) => (
+                        <tr key={index} className="hover:bg-gray-800/30 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-white text-center">
+                            {transaction.jenis}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                            {formatDate(transaction.tanggal_dimulai)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                            {formatDate(transaction.tanggal_berakhir)}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                            {transaction.metode_bayar}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                            {transaction.nominal_formatted}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                            <span className={`px-2 py-1 rounded-full text-xs ${
+                              transaction.status === 'Aktif' 
+                                ? 'bg-green-500/20 text-green-400' 
+                                : 'bg-gray-500/20 text-gray-400'
+                            }`}>
+                              {transaction.status}
+                            </span>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

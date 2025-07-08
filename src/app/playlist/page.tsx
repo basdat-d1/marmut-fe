@@ -14,16 +14,17 @@ import {
   Trash2, 
   Music, 
   Clock,
+  Library,
+  Eye
 } from 'lucide-react'
 
 interface Playlist {
-  id_user_playlist: string
+  id: string
   judul: string
   deskripsi: string
   jumlah_lagu: number
-  total_durasi: number
+  total_durasi: string
   tanggal_dibuat: string
-  email_pembuat: string
 }
 
 export default function PlaylistPage() {
@@ -52,6 +53,7 @@ export default function PlaylistPage() {
       setPlaylists(data.playlists || [])
     } catch (error) {
       console.error('Failed to load playlists:', error)
+      setError('Failed to load playlists')
     } finally {
       setLoading(false)
     }
@@ -67,7 +69,7 @@ export default function PlaylistPage() {
       setShowCreateForm(false)
       loadPlaylists()
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to create playlist')
+      setError(error.message || 'Failed to create playlist')
     }
   }
 
@@ -78,15 +80,8 @@ export default function PlaylistPage() {
       await playlistAPI.deletePlaylist(playlistId)
       loadPlaylists()
     } catch (error: any) {
-      setError(error.response?.data?.message || 'Failed to delete playlist')
+      setError(error.message || 'Failed to delete playlist')
     }
-  }
-
-  const formatDuration = (minutes: number) => {
-    if (minutes < 60) return `${minutes} menit`
-    const hours = Math.floor(minutes / 60)
-    const remainingMinutes = minutes % 60
-    return `${hours} jam ${remainingMinutes} menit`
   }
 
   const formatDate = (dateString: string) => {
@@ -99,154 +94,258 @@ export default function PlaylistPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading playlists...</p>
+          <p className="mt-4 text-gray-400">Loading playlists...</p>
         </div>
       </div>
     )
   }
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <div className="mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Your Playlists</h1>
-            <p className="text-gray-600">Manage your music collections</p>
-          </div>
-          <Button onClick={() => setShowCreateForm(true)}>
-            <Plus className="w-4 h-4 mr-2" />
-            Create Playlist
-          </Button>
-        </div>
-      </div>
-
-      {error && (
-        <div className="mb-4 p-4 bg-red-50 border border-red-200 rounded-lg">
-          <p className="text-red-600">{error}</p>
-        </div>
-      )}
-
-      {/* Create Playlist Form */}
-      {showCreateForm && (
-        <Card className="mb-6">
-          <CardHeader>
-            <CardTitle>Create New Playlist</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleCreatePlaylist} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Playlist Title
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Enter playlist title"
-                  value={createForm.judul}
-                  onChange={(e) => setCreateForm(prev => ({ ...prev, judul: e.target.value }))}
-                  required
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
-                  Description
-                </label>
-                <Input
-                  type="text"
-                  placeholder="Enter playlist description"
-                  value={createForm.deskripsi}
-                  onChange={(e) => setCreateForm(prev => ({ ...prev, deskripsi: e.target.value }))}
-                  required
-                />
-              </div>
-              <div className="flex space-x-2">
-                <Button type="submit">
-                  Create Playlist
-                </Button>
-                <Button 
-                  type="button" 
-                  variant="outline"
-                  onClick={() => {
-                    setShowCreateForm(false)
-                    setCreateForm({ judul: '', deskripsi: '' })
-                  }}
-                >
-                  Cancel
-                </Button>
-              </div>
-            </form>
-          </CardContent>
-        </Card>
-      )}
-
-      {/* Playlists List */}
-      {playlists.length === 0 ? (
-        <Card>
-          <CardContent className="text-center py-12">
-            <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">No Playlists Yet</h3>
-            <p className="text-gray-600 mb-4">You haven't created any playlists yet.</p>
-            <Button onClick={() => setShowCreateForm(true)}>
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
+      <div className="max-w-7xl mx-auto">
+        <div className="mb-8">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-white mb-2">User Playlist</h1>
+              <p className="text-gray-400">Manage your music collections</p>
+            </div>
+            <Button 
+              onClick={() => setShowCreateForm(true)}
+              className="btn-spotify"
+            >
               <Plus className="w-4 h-4 mr-2" />
-              Create Your First Playlist
+              Tambah Playlist
             </Button>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {playlists.map((playlist) => (
-            <Card key={playlist.id_user_playlist} className="hover:shadow-lg transition-shadow">
+          </div>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+            <p className="text-red-200">{error}</p>
+          </div>
+        )}
+
+        {/* Create Playlist Form */}
+        {showCreateForm && (
+          <Card className="mb-6 bg-gray-900/50 border-gray-800">
+            <CardHeader>
+              <CardTitle className="text-white">Tambah Playlist</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <form onSubmit={handleCreatePlaylist} className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Judul
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Enter playlist title"
+                    value={createForm.judul}
+                    onChange={(e) => setCreateForm(prev => ({ ...prev, judul: e.target.value }))}
+                    required
+                    className="bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-green-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Deskripsi
+                  </label>
+                  <Input
+                    type="text"
+                    placeholder="Enter playlist description"
+                    value={createForm.deskripsi}
+                    onChange={(e) => setCreateForm(prev => ({ ...prev, deskripsi: e.target.value }))}
+                    required
+                    className="bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-green-500"
+                  />
+                </div>
+                <div className="flex space-x-2">
+                  <Button type="submit" className="btn-spotify">
+                    Submit
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant="outline"
+                    className="border-gray-700 text-white hover:bg-gray-800"
+                    onClick={() => {
+                      setShowCreateForm(false)
+                      setCreateForm({ judul: '', deskripsi: '' })
+                    }}
+                  >
+                    Cancel
+                  </Button>
+                </div>
+              </form>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Playlists List */}
+        {playlists.length === 0 ? (
+          <Card className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 border-gray-700">
+            <CardContent className="text-center py-16">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Library className="w-10 h-10 text-green-400" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-3">Anda Belum Memiliki Playlist</h3>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">Mulai membuat playlist pertama Anda untuk mengorganisir musik favorit</p>
+              <Button 
+                onClick={() => setShowCreateForm(true)}
+                className="btn-spotify px-8 py-3 text-lg"
+              >
+                <Plus className="w-5 h-5 mr-2" />
+                Buat Playlist Pertama
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <div className="space-y-6">
+            {/* Playlist Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <Card className="bg-gradient-to-br from-green-900/30 to-green-800/30 border-green-500/30">
+                <CardContent className="p-4">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-green-500/20 rounded-lg flex items-center justify-center mr-3">
+                      <Library className="w-5 h-5 text-green-400" />
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Total Playlists</p>
+                      <p className="text-white font-bold text-xl">{playlists.length}</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gradient-to-br from-blue-900/30 to-blue-800/30 border-blue-500/30">
+                <CardContent className="p-4">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-blue-500/20 rounded-lg flex items-center justify-center mr-3">
+                      <Music className="w-5 h-5 text-blue-400" />
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Total Songs</p>
+                      <p className="text-white font-bold text-xl">
+                        {playlists.reduce((sum, playlist) => sum + playlist.jumlah_lagu, 0)}
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+              
+              <Card className="bg-gradient-to-br from-purple-900/30 to-purple-800/30 border-purple-500/30">
+                <CardContent className="p-4">
+                  <div className="flex items-center">
+                    <div className="w-10 h-10 bg-purple-500/20 rounded-lg flex items-center justify-center mr-3">
+                      <Clock className="w-5 h-5 text-purple-400" />
+                    </div>
+                    <div>
+                      <p className="text-gray-400 text-sm">Total Duration</p>
+                      <p className="text-white font-bold text-xl">
+                        {playlists.reduce((sum, playlist) => {
+                          const duration = parseInt(playlist.total_durasi) || 0
+                          return sum + duration
+                        }, 0)} min
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+
+            {/* Playlists Table */}
+            <Card className="bg-gray-900/50 border-gray-800">
               <CardHeader>
-                <CardTitle className="text-lg">{playlist.judul}</CardTitle>
-                <p className="text-sm text-gray-600">{playlist.deskripsi}</p>
+                <CardTitle className="text-white flex items-center">
+                  <Library className="w-5 h-5 mr-2 text-green-400" />
+                  Your Playlists
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between text-sm text-gray-600">
-                    <div className="flex items-center">
-                      <Music className="w-4 h-4 mr-1" />
-                      {playlist.jumlah_lagu} songs
-                    </div>
-                    <div className="flex items-center">
-                      <Clock className="w-4 h-4 mr-1" />
-                      {formatDuration(playlist.total_durasi)}
-                    </div>
-                  </div>
-                  <p className="text-xs text-gray-500">
-                    Created: {formatDate(playlist.tanggal_dibuat)}
-                  </p>
-                  <div className="flex space-x-2 pt-2">
-                    <Button 
-                      size="sm" 
-                      className="flex-1"
-                      onClick={() => router.push(`/playlist/${playlist.id_user_playlist}`)}
-                    >
-                      <Play className="w-4 h-4 mr-1" />
-                      View
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => router.push(`/playlist/${playlist.id_user_playlist}/edit`)}
-                    >
-                      <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => handleDeletePlaylist(playlist.id_user_playlist)}
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-800/50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Playlist
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Songs
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Duration
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                      {playlists.map((playlist) => (
+                        <tr key={playlist.id} className="hover:bg-gray-800/30 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg flex items-center justify-center mr-3">
+                                <Music className="w-5 h-5 text-green-400" />
+                              </div>
+                              <div>
+                                <div className="text-sm font-medium text-white">{playlist.judul}</div>
+                                <div className="text-sm text-gray-400">{playlist.deskripsi}</div>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <Music className="w-4 h-4 text-gray-400 mr-2" />
+                              <span className="text-sm text-gray-300">{playlist.jumlah_lagu} songs</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap">
+                            <div className="flex items-center">
+                              <Clock className="w-4 h-4 text-gray-400 mr-2" />
+                              <span className="text-sm text-gray-300">{playlist.total_durasi}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                            <div className="flex space-x-2">
+                              <Button 
+                                size="sm" 
+                                className="btn-spotify"
+                                onClick={() => router.push(`/playlist/${playlist.id}`)}
+                              >
+                                <Eye className="w-4 h-4 mr-1" />
+                                View
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="border-gray-700 text-white hover:bg-gray-800"
+                                onClick={() => router.push(`/playlist/${playlist.id}/edit`)}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
+                                onClick={() => handleDeletePlaylist(playlist.id)}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
                 </div>
               </CardContent>
             </Card>
-          ))}
-        </div>
-      )}
+          </div>
+        )}
+      </div>
     </div>
   )
 } 

@@ -88,8 +88,8 @@ export default function AlbumPage() {
       setCreateForm({ judul: '', label: '' })
       setShowCreateForm(false)
       loadAlbums()
-    } catch (error: any) {
-      setError(error.message || 'Failed to create album')
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to create album')
     }
   }
 
@@ -104,8 +104,8 @@ export default function AlbumPage() {
       setShowSongForm(false)
       setSelectedAlbum(null)
       loadAlbums()
-    } catch (error: any) {
-      setError(error.message || 'Failed to add song')
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to add song')
     }
   }
 
@@ -115,8 +115,8 @@ export default function AlbumPage() {
     try {
       await albumAPI.deleteAlbum(albumId)
       loadAlbums()
-    } catch (error: any) {
-      setError(error.message || 'Failed to delete album')
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Failed to delete album')
     }
   }
 
@@ -191,31 +191,33 @@ export default function AlbumPage() {
             <CardContent>
               <form onSubmit={handleCreateAlbum} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Album Title
                   </label>
                   <Input
                     type="text"
-                    placeholder="Enter album title"
                     value={createForm.judul}
                     onChange={(e) => setCreateForm(prev => ({ ...prev, judul: e.target.value }))}
-                    required
+                    placeholder="Enter album title"
                     className="bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-green-500"
+                    required
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Label
                   </label>
                   <Input
                     type="text"
-                    placeholder="Enter label name"
                     value={createForm.label}
                     onChange={(e) => setCreateForm(prev => ({ ...prev, label: e.target.value }))}
-                    required
+                    placeholder="Enter label name"
                     className="bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-green-500"
+                    required
                   />
                 </div>
+
                 <div className="flex space-x-2">
                   <Button type="submit" className="btn-spotify">
                     Create Album
@@ -241,38 +243,39 @@ export default function AlbumPage() {
         {showSongForm && selectedAlbum && (
           <Card className="mb-6 bg-gray-900/50 border-gray-800">
             <CardHeader>
-              <CardTitle className="text-white">Add Song to "{selectedAlbum.judul}"</CardTitle>
+              <CardTitle className="text-white">Add Song to &ldquo;{selectedAlbum.judul}&rdquo;</CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleAddSong} className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Song Title
                   </label>
                   <Input
                     type="text"
-                    placeholder="Enter song title"
                     value={songForm.judul}
                     onChange={(e) => setSongForm(prev => ({ ...prev, judul: e.target.value }))}
-                    required
+                    placeholder="Enter song title"
                     className="bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-green-500"
+                    required
                   />
                 </div>
+
                 <div>
-                  <label className="block text-sm font-medium text-white mb-2">
+                  <label className="block text-sm font-medium text-gray-300 mb-2">
                     Duration (minutes)
                   </label>
                   <Input
                     type="number"
-                    step="0.1"
-                    min="0"
-                    placeholder="Enter duration"
                     value={songForm.durasi}
-                    onChange={(e) => setSongForm(prev => ({ ...prev, durasi: parseFloat(e.target.value) || 0 }))}
-                    required
+                    onChange={(e) => setSongForm(prev => ({ ...prev, durasi: parseInt(e.target.value) || 0 }))}
+                    placeholder="Enter duration in minutes"
                     className="bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-green-500"
+                    min="1"
+                    required
                   />
                 </div>
+
                 <div className="flex space-x-2">
                   <Button type="submit" className="btn-spotify">
                     Add Song
@@ -301,7 +304,7 @@ export default function AlbumPage() {
             <CardContent className="text-center py-12">
               <Music className="w-16 h-16 text-gray-600 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">No Albums Yet</h3>
-              <p className="text-gray-400 mb-4">You haven't created any albums yet.</p>
+              <p className="text-gray-400 mb-4">You haven&apos;t created any albums yet.</p>
               <Button 
                 className="btn-spotify"
                 onClick={() => setShowCreateForm(true)}
@@ -314,64 +317,67 @@ export default function AlbumPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {albums.map((album) => (
-              <Card key={album.id} className="bg-gray-900/50 border-gray-800 hover:border-green-500/50 transition-all group">
-                <CardHeader>
-                  <CardTitle className="text-white group-hover:text-green-400 transition-colors">{album.judul}</CardTitle>
-                  <p className="text-sm text-gray-400">Label: {album.label}</p>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-center justify-between text-sm text-gray-400">
-                      <div className="flex items-center">
-                        <Music className="w-4 h-4 mr-1" />
-                        {album.jumlah_lagu} songs
-                      </div>
-                      <div className="flex items-center">
-                        <Clock className="w-4 h-4 mr-1" />
-                        {formatDuration(album.total_durasi)}
-                      </div>
-                    </div>
-                    <div className="text-sm text-gray-400">
-                      <Calendar className="w-4 h-4 inline mr-1" />
-                      {formatDate(album.tanggal_rilis)}
-                    </div>
-                    <div className="flex space-x-2">
-                      <Button 
-                        size="sm" 
-                        className="btn-spotify text-sm"
-                        onClick={() => {
-                          setSelectedAlbum(album)
-                          setShowSongForm(true)
-                        }}
-                      >
-                        <PlusCircle className="w-4 h-4 mr-1" />
-                        Add Song
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="border-gray-600 text-white hover:bg-gray-800"
-                        onClick={() => handleDeleteAlbum(album.id)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                    
-                    {/* Songs List */}
-                    {album.songs && album.songs.length > 0 && (
-                      <div className="mt-4 pt-4 border-t border-gray-700">
-                        <h4 className="text-sm font-medium text-white mb-2">Songs:</h4>
-                        <div className="space-y-2">
-                          {album.songs.map((song) => (
-                            <div key={song.id} className="flex items-center justify-between text-sm">
-                              <span className="text-gray-300">{song.judul}</span>
-                              <span className="text-gray-400">{formatDuration(song.durasi)}</span>
-                            </div>
-                          ))}
+              <Card key={album.id} className="bg-gray-900/50 border-gray-800 hover:border-green-500/50 transition-all">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1">
+                      <h3 className="text-lg font-semibold text-white mb-1">{album.judul}</h3>
+                      <p className="text-sm text-gray-400 mb-2">{album.label}</p>
+                      
+                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <Music className="w-4 h-4 mr-1" />
+                          {album.jumlah_lagu} songs
+                        </div>
+                        <div className="flex items-center">
+                          <Clock className="w-4 h-4 mr-1" />
+                          {formatDuration(album.total_durasi)}
                         </div>
                       </div>
-                    )}
+                      
+                      <div className="flex items-center mt-2 text-sm text-gray-500">
+                        <Calendar className="w-4 h-4 mr-1" />
+                        {formatDate(album.tanggal_rilis)}
+                      </div>
+                    </div>
                   </div>
+
+                  <div className="flex space-x-2">
+                    <Button 
+                      size="sm" 
+                      className="btn-spotify text-sm"
+                      onClick={() => {
+                        setSelectedAlbum(album)
+                        setShowSongForm(true)
+                      }}
+                    >
+                      <PlusCircle className="w-4 h-4 mr-1" />
+                      Add Song
+                    </Button>
+                    <Button 
+                      size="sm" 
+                      variant="outline"
+                      className="border-gray-600 text-white hover:bg-gray-800"
+                      onClick={() => handleDeleteAlbum(album.id)}
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </Button>
+                  </div>
+                  
+                  {/* Songs List */}
+                  {album.songs && album.songs.length > 0 && (
+                    <div className="mt-4 pt-4 border-t border-gray-700">
+                      <h4 className="text-sm font-medium text-white mb-2">Songs:</h4>
+                      <div className="space-y-2">
+                        {album.songs.map((song) => (
+                          <div key={song.id} className="flex items-center justify-between text-sm">
+                            <span className="text-gray-300">{song.judul}</span>
+                            <span className="text-gray-400">{formatDuration(song.durasi)}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             ))}

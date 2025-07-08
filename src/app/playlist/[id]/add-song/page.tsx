@@ -1,0 +1,311 @@
+"use client"
+
+import { useEffect, useState } from 'react'
+import { useAuth } from '@/contexts/AuthContext'
+import { useRouter, useParams } from 'next/navigation'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Input } from '@/components/ui/input'
+import { playlistAPI, songAPI } from '@/lib/api'
+import { 
+  ArrowLeft,
+  Search,
+  Plus,
+  Music,
+  User,
+  Disc
+} from 'lucide-react'
+
+interface Song {
+  id: string
+  judul: string
+  artist: string
+  album: string
+  durasi: number
+}
+
+interface Playlist {
+  id: string
+  judul: string
+  deskripsi: string
+}
+
+export default function AddSongToPlaylistPage() {
+  const { user } = useAuth()
+  const router = useRouter()
+  const params = useParams()
+  const playlistId = params.id as string
+  
+  const [playlist, setPlaylist] = useState<Playlist | null>(null)
+  const [availableSongs, setAvailableSongs] = useState<Song[]>([])
+  const [searchQuery, setSearchQuery] = useState('')
+  const [filteredSongs, setFilteredSongs] = useState<Song[]>([])
+  const [loading, setLoading] = useState(true)
+  const [loadingSongs, setLoadingSongs] = useState(false)
+  const [error, setError] = useState('')
+  const [successMessage, setSuccessMessage] = useState('')
+
+  useEffect(() => {
+    if (!user) {
+      router.push('/')
+      return
+    }
+    loadPlaylistData()
+  }, [user, router, playlistId])
+
+  useEffect(() => {
+    if (searchQuery.trim()) {
+      const filtered = availableSongs.filter(song =>
+        song.judul.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        song.artist.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        song.album.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+      setFilteredSongs(filtered)
+    } else {
+      setFilteredSongs(availableSongs)
+    }
+  }, [searchQuery, availableSongs])
+
+  const loadPlaylistData = async () => {
+    try {
+      const [playlistData, songsData] = await Promise.all([
+        playlistAPI.getPlaylistDetail(playlistId),
+        songAPI.getUserPlaylistsForSong()
+      ])
+      
+      setPlaylist(playlistData.playlist)
+      // For now, we'll use a mock list of available songs
+      // In a real app, you'd get this from an API
+      const mockSongs: Song[] = [
+        {
+          id: 'song-1',
+          judul: 'Bohemian Rhapsody',
+          artist: 'Queen',
+          album: 'A Night at the Opera',
+          durasi: 354
+        },
+        {
+          id: 'song-2',
+          judul: 'Hotel California',
+          artist: 'Eagles',
+          album: 'Hotel California',
+          durasi: 391
+        },
+        {
+          id: 'song-3',
+          judul: 'Stairway to Heaven',
+          artist: 'Led Zeppelin',
+          album: 'Led Zeppelin IV',
+          durasi: 482
+        }
+      ]
+      setAvailableSongs(mockSongs)
+      setFilteredSongs(mockSongs)
+    } catch (error) {
+      console.error('Failed to load playlist data:', error)
+      setError('Failed to load playlist data')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleAddSong = async (songId: string, songTitle: string) => {
+    try {
+      setLoadingSongs(true)
+      await playlistAPI.addSongToPlaylist(playlistId, songId)
+      setSuccessMessage(`Berhasil menambahkan lagu "${songTitle}" ke playlist!`)
+      setTimeout(() => setSuccessMessage(''), 3000)
+      // Remove song from available list
+      setAvailableSongs(prev => prev.filter(song => song.id !== songId))
+      setFilteredSongs(prev => prev.filter(song => song.id !== songId))
+    } catch (error: any) {
+      setError(error.message || 'Failed to add song to playlist')
+    } finally {
+      setLoadingSongs(false)
+    }
+  }
+
+  const formatDuration = (seconds: number) => {
+    const minutes = Math.floor(seconds / 60)
+    const remainingSeconds = seconds % 60
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+          <p className="mt-4 text-gray-400">Loading playlist...</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (!playlist) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-400 mb-4">Error</h1>
+          <p className="text-gray-400 mb-4">{error || 'Playlist not found'}</p>
+          <Button 
+            onClick={() => router.push('/playlist')}
+            className="btn-spotify"
+          >
+            Back to Playlists
+          </Button>
+        </div>
+      </div>
+    )
+  }
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
+      <div className="max-w-6xl mx-auto">
+        {/* Header */}
+        <div className="mb-6">
+          <Button 
+            variant="ghost" 
+            onClick={() => router.push(`/playlist/${playlistId}`)}
+            className="text-white hover:bg-gray-800 mb-4"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            Kembali ke Playlist
+          </Button>
+        </div>
+
+        {error && (
+          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
+            <p className="text-red-200">{error}</p>
+          </div>
+        )}
+
+        {successMessage && (
+          <div className="mb-4 p-4 bg-green-500/20 border border-green-500/50 rounded-lg">
+            <p className="text-green-200">{successMessage}</p>
+          </div>
+        )}
+
+        {/* Playlist Info */}
+        <Card className="mb-6 bg-gray-900/50 border-gray-800">
+          <CardHeader>
+            <CardTitle className="text-white text-2xl">Tambah Lagu ke Playlist</CardTitle>
+            <p className="text-gray-400">Playlist: {playlist.judul}</p>
+            <p className="text-gray-400">{playlist.deskripsi}</p>
+          </CardHeader>
+        </Card>
+
+        {/* Search */}
+        <Card className="mb-6 bg-gray-900/50 border-gray-800">
+          <CardContent className="p-6">
+            <div className="flex space-x-4">
+              <div className="flex-1">
+                <Input
+                  type="text"
+                  placeholder="Search for songs..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="bg-gray-800/50 border-gray-700 text-white placeholder-gray-400 focus:border-green-500"
+                />
+              </div>
+              <Button 
+                className="btn-spotify"
+                disabled={!searchQuery.trim()}
+              >
+                <Search className="w-4 h-4 mr-2" />
+                Search
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Available Songs */}
+        <Card className="bg-gray-900/50 border-gray-800">
+          <CardHeader>
+            <CardTitle className="text-white flex items-center">
+              <Music className="w-5 h-5 mr-2 text-green-400" />
+              Available Songs
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            {filteredSongs.length === 0 ? (
+              <div className="text-center py-8">
+                <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-white mb-2">No Songs Found</h3>
+                <p className="text-gray-400">
+                  {searchQuery ? `No songs match "${searchQuery}"` : 'No songs available'}
+                </p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-800/50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Song
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Artist
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Album
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Duration
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800">
+                    {filteredSongs.map((song) => (
+                      <tr key={song.id} className="hover:bg-gray-800/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="flex items-center">
+                            <div className="w-10 h-10 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg flex items-center justify-center mr-3">
+                              <Music className="w-5 h-5 text-green-400" />
+                            </div>
+                            <div>
+                              <div className="text-sm font-medium text-white">{song.judul}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          <div className="flex items-center">
+                            <User className="w-4 h-4 mr-2 text-gray-400" />
+                            {song.artist}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          <div className="flex items-center">
+                            <Disc className="w-4 h-4 mr-2 text-gray-400" />
+                            {song.album}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {formatDuration(song.durasi)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <Button 
+                            size="sm" 
+                            className="btn-spotify"
+                            onClick={() => handleAddSong(song.id, song.judul)}
+                            disabled={loadingSongs}
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Add
+                          </Button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  )
+} 

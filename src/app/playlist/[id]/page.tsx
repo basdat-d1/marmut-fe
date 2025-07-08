@@ -5,38 +5,38 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { playlistAPI, songAPI } from '@/lib/api'
+import { playlistAPI } from '@/lib/api'
 import { 
-  ArrowLeft, 
   Play, 
-  Clock, 
+  Plus, 
+  ArrowLeft,
   Music,
-  Trash2,
-  Download,
-  Plus,
-  Calendar
+  Clock,
+  User,
+  Calendar,
+  Shuffle,
+  Edit
 } from 'lucide-react'
 
-interface Playlist {
-  id_user_playlist: string
+interface Song {
+  id: string
   judul: string
-  deskripsi: string
-  jumlah_lagu: number
-  total_durasi: number
-  tanggal_dibuat: string
-  email_pembuat: string
-  songs: PlaylistSong[]
-}
-
-interface PlaylistSong {
-  id_konten: string
-  judul: string
-  durasi: number
-  tanggal_rilis: string
-  tahun: number
   artist: string
   album: string
-  genres: string[]
+  durasi: string
+}
+
+interface PlaylistDetail {
+  playlist: {
+    id: string
+    judul: string
+    deskripsi: string
+    jumlah_lagu: number
+    total_durasi: string
+    tanggal_dibuat: string
+    email_pembuat: string
+  }
+  songs: Song[]
 }
 
 export default function PlaylistDetailPage() {
@@ -44,41 +44,35 @@ export default function PlaylistDetailPage() {
   const router = useRouter()
   const params = useParams()
   const playlistId = params.id as string
-
-  const [playlist, setPlaylist] = useState<Playlist | null>(null)
+  
+  const [playlistDetail, setPlaylistDetail] = useState<PlaylistDetail | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState('')
-  const [currentSong, setCurrentSong] = useState<string | null>(null)
-  const [isPlaying, setIsPlaying] = useState(false)
-  const [processingDownload, setProcessingDownload] = useState<string | null>(null)
 
   useEffect(() => {
     if (!user) {
       router.push('/')
       return
     }
-    loadPlaylistData()
+    loadPlaylistDetail()
   }, [user, router, playlistId])
 
-  const loadPlaylistData = async () => {
+  const loadPlaylistDetail = async () => {
     try {
-      const data = await playlistAPI.getPlaylistSongs(playlistId)
-      setPlaylist(data)
+      const data = await playlistAPI.getPlaylistDetail(playlistId)
+      setPlaylistDetail(data)
     } catch (error) {
-      console.error('Failed to load playlist data:', error)
-      setError('Failed to load playlist information')
+      console.error('Failed to load playlist detail:', error)
+      setError('Failed to load playlist detail')
     } finally {
       setLoading(false)
     }
   }
 
-  const handlePlayPlaylist = async () => {
-    if (!playlist) return
-
+  const handleShufflePlay = async () => {
     try {
-      await playlistAPI.playPlaylist(playlistId, playlist.email_pembuat)
-      setCurrentSong(playlist.songs[0]?.id_konten || null)
-      setIsPlaying(true)
+      await playlistAPI.playPlaylist(playlistId)
+      // Show success message or update UI
     } catch (error: any) {
       setError(error.message || 'Failed to play playlist')
     }
@@ -86,51 +80,15 @@ export default function PlaylistDetailPage() {
 
   const handlePlaySong = async (songId: string) => {
     try {
-      await songAPI.playSong(songId, 0)
-      setCurrentSong(songId)
-      setIsPlaying(true)
+      // This would typically call a play song API
+      console.log('Playing song:', songId)
     } catch (error: any) {
       setError(error.message || 'Failed to play song')
     }
   }
 
-  const handleRemoveSong = async (songId: string) => {
-    if (!confirm('Are you sure you want to remove this song from the playlist?')) return
-
-    try {
-      await playlistAPI.removeSongFromPlaylist(playlistId, songId)
-      loadPlaylistData() // Reload to get updated data
-    } catch (error: any) {
-      setError(error.message || 'Failed to remove song')
-    }
-  }
-
-  const handleDownloadSong = async (songId: string) => {
-    if (!user?.is_premium) {
-      alert('Download feature is only available for premium users')
-      return
-    }
-
-    setProcessingDownload(songId)
-    try {
-      await songAPI.downloadSong(songId)
-      alert('Song downloaded successfully!')
-    } catch (error: any) {
-      setError(error.message || 'Failed to download song')
-    } finally {
-      setProcessingDownload(null)
-    }
-  }
-
-  const formatDuration = (minutes: number) => {
-    if (minutes < 60) return `${minutes} min`
-    const hours = Math.floor(minutes / 60)
-    const remainingMinutes = minutes % 60
-    return `${hours}h ${remainingMinutes}m`
-  }
-
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
+    return new Date(dateString).toLocaleDateString('id-ID', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
@@ -148,38 +106,35 @@ export default function PlaylistDetailPage() {
     )
   }
 
-  if (!playlist) {
+  if (!playlistDetail) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
-        <Card className="bg-gray-900/50 border-gray-800">
-          <CardContent className="text-center py-12">
-            <Music className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-white mb-2">Playlist Not Found</h3>
-            <p className="text-gray-400 mb-4">The playlist you're looking for doesn't exist.</p>
-            <Button 
-              onClick={() => router.back()}
-              className="btn-spotify"
-            >
-              <ArrowLeft className="w-4 h-4 mr-2" />
-              Go Back
-            </Button>
-          </CardContent>
-        </Card>
+        <div className="text-center">
+          <h1 className="text-2xl font-bold text-red-400 mb-4">Error</h1>
+          <p className="text-gray-400 mb-4">{error || 'Playlist not found'}</p>
+          <Button 
+            onClick={() => router.push('/playlist')}
+            className="btn-spotify"
+          >
+            Back to Playlists
+          </Button>
+        </div>
       </div>
     )
   }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
-      <div className="max-w-6xl mx-auto">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
         <div className="mb-6">
           <Button 
-            variant="outline" 
-            onClick={() => router.back()}
-            className="border-gray-600 text-white hover:bg-gray-800"
+            variant="ghost" 
+            onClick={() => router.push('/playlist')}
+            className="text-white hover:bg-gray-800 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Back
+            Kembali
           </Button>
         </div>
 
@@ -192,54 +147,52 @@ export default function PlaylistDetailPage() {
         {/* Playlist Information */}
         <Card className="mb-6 bg-gray-900/50 border-gray-800">
           <CardHeader>
-            <div className="flex items-center justify-between">
-              <div>
-                <CardTitle className="text-2xl text-white">{playlist.judul}</CardTitle>
-                <p className="text-gray-400 mt-2">{playlist.deskripsi}</p>
+            <CardTitle className="text-white text-2xl">{playlistDetail.playlist.judul}</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="flex items-center space-x-2">
+                <User className="w-4 h-4 text-gray-400" />
+                <span className="text-gray-400">Pembuat:</span>
+                <span className="text-white">{playlistDetail.playlist.email_pembuat}</span>
               </div>
-              <div className="flex space-x-2">
-                <Button 
-                  onClick={handlePlayPlaylist}
-                  className="btn-spotify"
-                  disabled={playlist.songs.length === 0}
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  Play All
-                </Button>
-                <Button 
-                  onClick={() => router.push(`/playlist`)}
-                  variant="outline"
-                  className="border-gray-600 text-white hover:bg-gray-800"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Manage
-                </Button>
+              <div className="flex items-center space-x-2">
+                <Music className="w-4 h-4 text-gray-400" />
+                <span className="text-gray-400">Jumlah Lagu:</span>
+                <span className="text-white">{playlistDetail.playlist.jumlah_lagu}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Clock className="w-4 h-4 text-gray-400" />
+                <span className="text-gray-400">Total Durasi:</span>
+                <span className="text-white">{playlistDetail.playlist.total_durasi}</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Calendar className="w-4 h-4 text-gray-400" />
+                <span className="text-gray-400">Tanggal Dibuat:</span>
+                <span className="text-white">{formatDate(playlistDetail.playlist.tanggal_dibuat)}</span>
               </div>
             </div>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="flex items-center">
-                <Music className="w-5 h-5 text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-400">Songs</p>
-                  <p className="font-medium text-white">{playlist.jumlah_lagu}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Clock className="w-5 h-5 text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-400">Duration</p>
-                  <p className="font-medium text-white">{formatDuration(playlist.total_durasi)}</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Calendar className="w-5 h-5 text-gray-400 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-400">Created</p>
-                  <p className="font-medium text-white">{formatDate(playlist.tanggal_dibuat)}</p>
-                </div>
-              </div>
+            <div>
+              <p className="text-gray-400">{playlistDetail.playlist.deskripsi}</p>
+            </div>
+            <div className="flex space-x-2">
+              <Button 
+                onClick={handleShufflePlay}
+                className="btn-spotify"
+              >
+                <Shuffle className="w-4 h-4 mr-2" />
+                Shuffle Play
+              </Button>
+              {playlistDetail.playlist.email_pembuat === user?.email && (
+                <Button 
+                  onClick={() => router.push(`/playlist/${playlistId}/edit`)}
+                  variant="outline"
+                  className="border-gray-700 text-white hover:bg-gray-800"
+                >
+                  <Edit className="w-4 h-4 mr-2" />
+                  Edit Playlist
+                </Button>
+              )}
             </div>
           </CardContent>
         </Card>
@@ -247,121 +200,102 @@ export default function PlaylistDetailPage() {
         {/* Songs List */}
         <Card className="bg-gray-900/50 border-gray-800">
           <CardHeader>
-            <CardTitle className="text-white">Songs</CardTitle>
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-white">Daftar Lagu</CardTitle>
+              <Button 
+                onClick={() => router.push(`/playlist/${playlistId}/add-song`)}
+                className="btn-spotify"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Tambah Lagu
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            {playlist.songs.length === 0 ? (
-              <div className="text-center py-12">
-                <Music className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-white mb-2">No Songs</h3>
+            {playlistDetail.songs.length === 0 ? (
+              <div className="text-center py-8">
+                <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-white mb-2">No Songs Yet</h3>
                 <p className="text-gray-400 mb-4">This playlist doesn't have any songs yet.</p>
                 <Button 
-                  onClick={() => router.push(`/playlist`)}
+                  onClick={() => router.push(`/playlist/${playlistId}/add-song`)}
                   className="btn-spotify"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add Songs
+                  Add First Song
                 </Button>
               </div>
             ) : (
-              <div className="space-y-2">
-                {playlist.songs.map((song, index) => (
-                  <div 
-                    key={song.id_konten} 
-                    className="flex items-center justify-between p-4 rounded-lg hover:bg-gray-800/50 transition-colors"
-                  >
-                    <div className="flex items-center space-x-4 flex-1">
-                      <div className="w-8 h-8 bg-gray-700 rounded-full flex items-center justify-center text-sm font-medium text-gray-300">
-                        {index + 1}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-medium text-white">{song.judul}</h3>
-                        <p className="text-sm text-gray-400">{song.artist} • {song.album}</p>
-                        <div className="flex flex-wrap gap-1 mt-1">
-                          {song.genres.map((genre, idx) => (
-                            <span key={idx} className="px-2 py-1 bg-green-500/20 text-green-400 rounded-full text-xs">
-                              {genre}
-                            </span>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <div className="text-sm text-gray-400">
-                        {formatDuration(song.durasi)}
-                      </div>
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="border-gray-600 text-white hover:bg-gray-800"
-                        onClick={() => handlePlaySong(song.id_konten)}
-                      >
-                        <Play className="w-4 h-4" />
-                      </Button>
-                      {user?.is_premium && (
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          className="border-gray-600 text-white hover:bg-gray-800"
-                          onClick={() => handleDownloadSong(song.id_konten)}
-                          disabled={processingDownload === song.id_konten}
-                        >
-                          {processingDownload === song.id_konten ? (
-                            <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current"></div>
-                          ) : (
-                            <Download className="w-4 h-4" />
-                          )}
-                        </Button>
-                      )}
-                      <Button 
-                        size="sm" 
-                        variant="outline"
-                        className="border-red-600 text-red-400 hover:bg-red-600 hover:text-white"
-                        onClick={() => handleRemoveSong(song.id_konten)}
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-800/50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Judul Lagu
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Oleh
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Durasi
+                      </th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                        Actions
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800">
+                    {playlistDetail.songs.map((song) => (
+                      <tr key={song.id} className="hover:bg-gray-800/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          <div className="text-sm font-medium text-white">{song.judul}</div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {song.artist}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
+                          {song.durasi}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex space-x-2">
+                            <Button 
+                              size="sm" 
+                              className="btn-spotify"
+                              onClick={() => handlePlaySong(song.id)}
+                            >
+                              <Play className="w-4 h-4" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="border-gray-700 text-white hover:bg-gray-800"
+                              onClick={() => router.push(`/song/${song.id}`)}
+                            >
+                              Lihat
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline"
+                              className="border-gray-700 text-white hover:bg-gray-800"
+                              onClick={() => {
+                                // Handle remove song from playlist
+                                if (confirm('Are you sure you want to remove this song from the playlist?')) {
+                                  // Call remove song API
+                                }
+                              }}
+                            >
+                              Hapus
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
               </div>
             )}
           </CardContent>
         </Card>
-
-        {/* Audio Player Placeholder */}
-        {currentSong && (
-          <div className="fixed bottom-0 left-0 right-0 bg-gray-900/95 backdrop-blur border-t border-gray-800 p-4">
-            <div className="max-w-6xl mx-auto flex items-center justify-between">
-              <div className="flex items-center space-x-4">
-                <Button 
-                  size="sm" 
-                  className="btn-spotify"
-                  onClick={() => setIsPlaying(!isPlaying)}
-                >
-                  {isPlaying ? '⏸️' : '▶️'}
-                </Button>
-                <div>
-                  <p className="font-medium text-white">Now Playing</p>
-                  <p className="text-sm text-gray-400">
-                    {playlist.songs.find(s => s.id_konten === currentSong)?.judul}
-                  </p>
-                </div>
-              </div>
-              <Button 
-                size="sm" 
-                variant="outline"
-                className="border-gray-600 text-white hover:bg-gray-800"
-                onClick={() => {
-                  setCurrentSong(null)
-                  setIsPlaying(false)
-                }}
-              >
-                Close
-              </Button>
-            </div>
-          </div>
-        )}
       </div>
     </div>
   )

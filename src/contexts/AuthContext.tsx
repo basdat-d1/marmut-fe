@@ -17,6 +17,8 @@ interface User {
   is_premium?: boolean
   is_label?: boolean
   kontak?: string
+  type?: string
+  roles?: string[]
 }
 
 interface AuthContextType {
@@ -43,6 +45,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authAPI.getCurrentUser()
       if (response.user) {
         setUser(response.user)
+      } else if (response.email) {
+        // Handle direct user object response
+        setUser(response)
       }
     } catch (error) {
       console.log('No active session')
@@ -55,7 +60,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       const response = await authAPI.login(email, password)
-      if (response.success) {
+      if (response.message && response.user) {
+        setUser(response.user)
+      } else if (response.success) {
         await checkAuthStatus() // Refresh user data
       } else {
         throw new Error(response.message || 'Login failed')
@@ -80,13 +87,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       if (type === 'user') {
         const response = await authAPI.registerUser(userData)
-        if (!response.success) {
-          throw new Error(response.message || 'Registration failed')
+        if (response.error) {
+          throw new Error(response.error)
         }
       } else {
         const response = await authAPI.registerLabel(userData)
-        if (!response.success) {
-          throw new Error(response.message || 'Registration failed')
+        if (response.error) {
+          throw new Error(response.error)
         }
       }
     } catch (error: any) {

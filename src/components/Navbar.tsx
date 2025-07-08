@@ -104,7 +104,7 @@ export default function Navbar() {
             </Button>
           </Link>
 
-          {!user.is_label && (
+          {user && !user.is_label && (
             <Link href="/chart">
               <Button variant="ghost" className="text-white hover:bg-gray-800">
                 <BarChart3 className="w-4 h-4 mr-2" />
@@ -113,7 +113,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {!user.is_label && (
+          {user && !user.is_label && (
             <Link href="/search">
               <Button variant="ghost" className="text-white hover:bg-gray-800">
                 <Search className="w-4 h-4 mr-2" />
@@ -122,7 +122,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {!user.is_label && (
+          {user && !user.is_label && (
             <Link href="/playlist">
               <Button variant="ghost" className="text-white hover:bg-gray-800">
                 <Library className="w-4 h-4 mr-2" />
@@ -131,7 +131,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {!user.is_label && (
+          {user && !user.is_label && (
             <Link href="/subscription">
               <Button variant="ghost" className="text-white hover:bg-gray-800">
                 <Package className="w-4 h-4 mr-2" />
@@ -140,7 +140,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {user.is_premium && !user.is_label && (
+          {user && user.is_premium && !user.is_label && (
             <Link href="/downloaded-songs">
               <Button variant="ghost" className="text-white hover:bg-gray-800">
                 <Download className="w-4 h-4 mr-2" />
@@ -149,7 +149,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {user.is_podcaster && (
+          {user && user.is_podcaster && (
             <Link href="/podcast">
               <Button variant="ghost" className="text-white hover:bg-gray-800">
                 <Mic className="w-4 h-4 mr-2" />
@@ -158,7 +158,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {(user.is_artist || user.is_songwriter) && (
+          {user && (user.is_artist || user.is_songwriter) && (
             <Link href="/album">
               <Button variant="ghost" className="text-white hover:bg-gray-800">
                 <Music className="w-4 h-4 mr-2" />
@@ -167,7 +167,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {user.is_label && (
+          {user && user.is_label && (
             <Link href="/label-album">
               <Button variant="ghost" className="text-white hover:bg-gray-800">
                 <Music className="w-4 h-4 mr-2" />
@@ -176,7 +176,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {(user.is_artist || user.is_songwriter || user.is_label) && (
+          {user && (user.is_artist || user.is_songwriter || user.is_label) && (
             <Link href="/royalty">
               <Button variant="ghost" className="text-white hover:bg-gray-800">
                 <DollarSign className="w-4 h-4 mr-2" />
@@ -216,7 +216,7 @@ export default function Navbar() {
             </Button>
           </Link>
 
-          {!user.is_label && (
+          {user && !user.is_label && (
             <Link href="/chart">
               <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
                 <BarChart3 className="w-4 h-4 mr-2" />
@@ -225,7 +225,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {!user.is_label && (
+          {user && !user.is_label && (
             <Link href="/search">
               <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
                 <Search className="w-4 h-4 mr-2" />
@@ -234,7 +234,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {!user.is_label && (
+          {user && !user.is_label && (
             <Link href="/playlist">
               <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
                 <Library className="w-4 h-4 mr-2" />
@@ -243,7 +243,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {!user.is_label && (
+          {user && !user.is_label && (
             <Link href="/subscription">
               <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
                 <Package className="w-4 h-4 mr-2" />
@@ -252,7 +252,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {user.is_premium && !user.is_label && (
+          {user && user.is_premium && !user.is_label && (
             <Link href="/downloaded-songs">
               <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
                 <Download className="w-4 h-4 mr-2" />
@@ -261,7 +261,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {user.is_podcaster && (
+          {user && user.is_podcaster && (
             <Link href="/podcast">
               <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
                 <Mic className="w-4 h-4 mr-2" />
@@ -270,7 +270,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {(user.is_artist || user.is_songwriter) && (
+          {user && (user.is_artist || user.is_songwriter) && (
             <Link href="/album">
               <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
                 <Music className="w-4 h-4 mr-2" />
@@ -279,7 +279,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {user.is_label && (
+          {user && user.is_label && (
             <Link href="/label-album">
               <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
                 <Music className="w-4 h-4 mr-2" />
@@ -288,7 +288,7 @@ export default function Navbar() {
             </Link>
           )}
 
-          {(user.is_artist || user.is_songwriter || user.is_label) && (
+          {user && (user.is_artist || user.is_songwriter || user.is_label) && (
             <Link href="/royalty">
               <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
                 <DollarSign className="w-4 h-4 mr-2" />
