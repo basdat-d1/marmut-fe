@@ -76,40 +76,9 @@ export default function DashboardPage() {
         profileData = await dashboardAPI.getUserProfile()
       }
 
-      // Load additional data based on user roles
-      const additionalData: any = {}
-
-      if (!user.is_label) {
-        try {
-          const playlistData = await playlistAPI.getUserPlaylists()
-          additionalData.playlists = playlistData.playlists || []
-        } catch (error) {
-          additionalData.playlists = []
-        }
-      }
-
-      if (user.is_artist || user.is_songwriter) {
-        try {
-          const albumData = await albumAPI.getUserAlbums()
-          additionalData.albums = albumData.albums || []
-        } catch (error) {
-          additionalData.albums = []
-        }
-      }
-
-      if (user.is_podcaster) {
-        try {
-          const podcastData = await podcastAPI.getUserPodcasts()
-          additionalData.podcasts = podcastData.podcasts || []
-        } catch (error) {
-          additionalData.podcasts = []
-        }
-      }
-
-      setProfile({
-        ...profileData,
-        ...additionalData,
-      })
+      // The backend dashboard API already provides all the necessary data
+      // including playlists, songs, podcasts, and albums based on user roles
+      setProfile(profileData)
     } catch (error) {
       setError('Failed to load profile data')
     } finally {
@@ -156,8 +125,7 @@ export default function DashboardPage() {
     if (profile.is_songwriter) roles.push('Songwriter')
     if (profile.is_podcaster) roles.push('Podcaster')
     if (profile.is_label) roles.push('Label')
-    // Only show Music Lover if no other role
-    if (roles.length === 0 && !profile.is_label) roles.push('Music Lover')
+    // Don't show Music Lover role as per requirements
     return roles.join(', ')
   }
 
@@ -179,9 +147,6 @@ export default function DashboardPage() {
               Welcome back, <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">{profile.nama}</span>! <span className="inline-block">👋</span>
             </h1>
             <p className="text-gray-200 text-lg">Here's what's happening with your music world</p>
-          </div>
-          <div className="flex items-center gap-3">
-            <span className="text-green-400 font-semibold text-sm flex items-center"><span className="w-3 h-3 bg-green-400 rounded-full mr-2 animate-pulse"></span>Online</span>
           </div>
         </div>
 
@@ -229,6 +194,10 @@ export default function DashboardPage() {
                 {/* Only for Pengguna (not label) */}
                 {!profile.is_label && <>
                   <div>
+                    <label className="text-xs text-gray-400">SUBSCRIPTION STATUS</label>
+                    <div className="text-white font-medium">{profile.is_premium ? 'Premium' : 'Basic'}</div>
+                  </div>
+                  <div>
                     <label className="text-xs text-gray-400">GENDER</label>
                     <div className="text-white font-medium">{getGenderText(profile.gender)}</div>
                   </div>
@@ -245,8 +214,8 @@ export default function DashboardPage() {
                     <div className="text-white font-medium">{profile.kota_asal}</div>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-xs text-gray-400">Role</label>
-                    <div className="text-white font-medium">Role: {getRoles()}</div>
+                    <label className="text-xs text-gray-400">ROLE</label>
+                    <div className="text-white font-medium">{getRoles()}</div>
                   </div>
                 </>}
                 {/* Only for Label */}
@@ -267,35 +236,12 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent className="space-y-4 pt-2">
               <div className="grid grid-cols-1 gap-3">
-                <Button className="w-full h-16 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-xl font-semibold text-lg flex items-center justify-start gap-4 px-6 shadow-md" onClick={() => router.push('/playlist')}>
-                  <Library className="w-6 h-6" /> My Playlists
-                </Button>
                 <Button className="w-full h-16 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700 text-white rounded-xl font-semibold text-lg flex items-center justify-start gap-4 px-6 shadow-md" onClick={() => router.push('/search')}>
                   <Music className="w-6 h-6" /> Discover Music
                 </Button>
                 <Button className="w-full h-16 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white rounded-xl font-semibold text-lg flex items-center justify-start gap-4 px-6 shadow-md" onClick={() => router.push('/chart')}>
                   <TrendingUp className="w-6 h-6" /> View Charts
                 </Button>
-                {(profile.is_artist || profile.is_songwriter) && (
-                  <Button className="w-full h-16 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white rounded-xl font-semibold text-lg flex items-center justify-start gap-4 px-6 shadow-md" onClick={() => router.push('/album')}>
-                    <Album className="w-6 h-6" /> Manage Albums
-                  </Button>
-                )}
-                {(profile.is_artist || profile.is_songwriter) && (
-                  <Button className="w-full h-16 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white rounded-xl font-semibold text-lg flex items-center justify-start gap-4 px-6 shadow-md" onClick={() => router.push('/royalty')}>
-                    <DollarSign className="w-6 h-6" /> Check Royalties
-                  </Button>
-                )}
-                {profile.is_podcaster && (
-                  <Button className="w-full h-16 bg-gradient-to-r from-teal-600 to-green-600 hover:from-teal-700 hover:to-green-700 text-white rounded-xl font-semibold text-lg flex items-center justify-start gap-4 px-6 shadow-md" onClick={() => router.push('/podcast')}>
-                    <Mic className="w-6 h-6" /> Manage Podcasts
-                  </Button>
-                )}
-                {profile.is_label && (
-                  <Button className="w-full h-16 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white rounded-xl font-semibold text-lg flex items-center justify-start gap-4 px-6 shadow-md" onClick={() => router.push('/label-album')}>
-                    <Album className="w-6 h-6" /> Label Albums
-                  </Button>
-                )}
                 {!profile.is_premium && (
                   <Button className="w-full h-16 bg-gradient-to-r from-yellow-600 to-orange-600 hover:from-yellow-700 hover:to-orange-700 text-white rounded-xl font-semibold text-lg flex items-center justify-start gap-4 px-6 shadow-md" onClick={() => router.push('/subscription')}>
                     <Crown className="w-6 h-6" /> Upgrade to Premium
@@ -307,9 +253,9 @@ export default function DashboardPage() {
         </div>
 
         {/* Daftar sesuai role */}
-        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Playlist untuk Pengguna Biasa */}
-          {!profile.is_label && !profile.is_artist && !profile.is_songwriter && !profile.is_podcaster && (
+        <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {/* Playlist untuk semua user (kecuali label) */}
+          {!profile.is_label && (
             <Card className="bg-gray-900/80 border-0 shadow-md">
               <CardHeader>
                 <CardTitle className="text-white">My Playlists</CardTitle>

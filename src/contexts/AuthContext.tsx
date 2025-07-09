@@ -99,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (response.message && response.user) {
         setUser(response.user)
       } else if (response.success) {
-        await checkAuthStatus() // Refresh user data
+        await checkAuthStatus()
       } else {
         throw new Error(response.message || 'Login failed')
       }
@@ -113,6 +113,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authAPI.logout()
       setUser(null)
     } catch (error) {
+      console.error('Logout error:', error)
       setUser(null)
     }
   }

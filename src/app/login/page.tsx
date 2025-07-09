@@ -144,9 +144,6 @@ export default function LoginPage() {
                 Register here
               </Link>
             </p>
-            <p className="text-gray-500 text-sm mt-2">
-              Choose between User or Label account
-            </p>
           </div>
         </CardContent>
       </Card>

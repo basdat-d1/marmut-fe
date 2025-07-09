@@ -191,6 +191,10 @@ export const albumAPI = {
     return apiRequest('/api/album-song/albums/')
   },
 
+  async getUserSongs() {
+    return apiRequest('/api/album-song/user-songs/')
+  },
+
   async getAlbumDetail(albumId: string) {
     return apiRequest(`/api/album-song/albums/${albumId}/`)
   },
