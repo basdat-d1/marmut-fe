@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, useToast } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,13 +11,13 @@ import { Eye, EyeOff, Music } from 'lucide-react'
 
 export default function LoginPage() {
   const { login, user } = useAuth()
+  const { showToast } = useToast()
   const router = useRouter()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   })
   const [loading, setLoading] = useState(false)
-  const [error, setError] = useState('')
   const [showPassword, setShowPassword] = useState(false)
 
   // Redirect if already logged in
@@ -34,13 +34,12 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
-    setError('')
 
     try {
       await login(formData.email, formData.password)
       router.push('/dashboard')
     } catch (error: any) {
-      setError(error.message || 'Login failed. Please check your credentials.')
+      showToast(error.message || 'Login failed. Please check your credentials.', 'error')
     } finally {
       setLoading(false)
     }
@@ -57,25 +56,23 @@ export default function LoginPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center p-4">
       <Card className="w-full max-w-md bg-gray-900/80 backdrop-blur-sm border-gray-800">
-        <CardHeader className="text-center">
-          <div className="flex justify-center mb-4">
-            <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center">
-              <Music className="w-8 h-8 text-white" />
-            </div>
+        <CardHeader className="relative text-center pb-4">
+          <Link 
+            href="/" 
+            className="absolute left-6 top-6 text-gray-400 hover:text-white text-sm flex items-center gap-2 transition-colors"
+          >
+            ← Back to Home
+          </Link>
+          <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center mx-auto mb-2 mt-6">
+            <Music className="w-8 h-8 text-white" />
           </div>
-          <CardTitle className="text-2xl font-bold text-white">
-            Welcome Back
+          <CardTitle className="text-2xl font-bold text-white mt-2">
+            Login dan Register
           </CardTitle>
-          <p className="text-gray-400">Sign in to your Marmut account</p>
+          <p className="text-gray-400">Sign in to your account</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
-            {error && (
-              <div className="p-3 bg-red-500/20 border border-red-500/50 rounded-lg">
-                <p className="text-red-200 text-sm">{error}</p>
-              </div>
-            )}
-
             <div>
               <label className="block text-sm font-medium text-white mb-2">
                 Email
@@ -144,18 +141,12 @@ export default function LoginPage() {
                 href="/register" 
                 className="text-green-400 hover:text-green-300 font-medium"
               >
-                Sign up here
+                Register here
               </Link>
             </p>
-          </div>
-
-          <div className="mt-4 text-center">
-            <Link 
-              href="/" 
-              className="text-gray-400 hover:text-white text-sm"
-            >
-              ← Back to Home
-            </Link>
+            <p className="text-gray-500 text-sm mt-2">
+              Choose between User or Label account
+            </p>
           </div>
         </CardContent>
       </Card>

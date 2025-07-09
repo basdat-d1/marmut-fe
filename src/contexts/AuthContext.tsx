@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react'
 import { authAPI } from '@/lib/api'
+import { Toast, ToastProps } from '@/components/ui/toast';
 
 interface User {
   email: string
@@ -31,6 +32,42 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+const ToastContext = createContext<{
+  showToast: (message: string, type?: ToastProps['type']) => void;
+} | undefined>(undefined);
+
+export function useToast() {
+  const ctx = useContext(ToastContext);
+  if (!ctx) throw new Error('useToast must be used within ToastProvider');
+  return ctx;
+}
+
+export function ToastProvider({ children }: { children: React.ReactNode }) {
+  const [toast, setToast] = useState<{ message: string; type: ToastProps['type']; isOpen: boolean }>({
+    message: '',
+    type: 'info',
+    isOpen: false,
+  });
+
+  const showToast = (message: string, type: ToastProps['type'] = 'info') => {
+    setToast({ message, type, isOpen: true });
+  };
+
+  const handleClose = () => setToast((t) => ({ ...t, isOpen: false }));
+
+  return (
+    <ToastContext.Provider value={{ showToast }}>
+      {children}
+      <Toast
+        message={toast.message}
+        type={toast.type}
+        isOpen={toast.isOpen}
+        onClose={handleClose}
+      />
+    </ToastContext.Provider>
+  );
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [loading, setLoading] = useState(true)
@@ -50,7 +87,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response)
       }
     } catch (error) {
-      console.log('No active session')
       setUser(null)
     } finally {
       setLoading(false)
@@ -77,8 +113,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       await authAPI.logout()
       setUser(null)
     } catch (error) {
-      console.error('Logout error:', error)
-      // Still clear user state even if API call fails
       setUser(null)
     }
   }

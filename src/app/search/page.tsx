@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, useToast } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -39,6 +39,7 @@ interface SearchResponse {
 
 export default function SearchPage() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const router = useRouter()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
@@ -74,7 +75,7 @@ export default function SearchPage() {
       ]
       setResults(allResults)
     } catch (error) {
-      console.error('Search failed:', error)
+      showToast('Search failed. Please try again.', 'error')
       setResults([])
     } finally {
       setLoading(false)
@@ -123,7 +124,7 @@ export default function SearchPage() {
 
   const handlePlayItem = (item: SearchResult) => {
     // Handle play functionality based on item type
-    console.log('Playing:', item)
+    
   }
 
   return (
@@ -135,7 +136,7 @@ export default function SearchPage() {
         </div>
 
         {/* Search Form */}
-        <Card className="mb-6 bg-gray-900/50 border-gray-800">
+        <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
           <CardContent className="p-6">
             <form onSubmit={handleSearch} className="flex space-x-4">
               <div className="flex-1">
@@ -170,9 +171,10 @@ export default function SearchPage() {
 
         {/* Search Results */}
         {searched && (
-          <Card className="bg-gray-900/50 border-gray-800">
+          <Card className="bg-gray-900/80 border-0 shadow-md">
             <CardHeader>
-              <CardTitle className="text-white">
+              <CardTitle className="text-white flex items-center gap-2">
+                <Search className="w-5 h-5 text-green-400" />
                 {loading ? 'Searching...' : `Hasil Pencarian "${query}"`}
               </CardTitle>
             </CardHeader>

@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, useToast } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { playlistAPI } from '@/lib/api'
 import { 
   Plus, 
@@ -29,6 +30,7 @@ interface Playlist {
 
 export default function PlaylistPage() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const router = useRouter()
   const [playlists, setPlaylists] = useState<Playlist[]>([])
   const [loading, setLoading] = useState(true)
@@ -37,7 +39,8 @@ export default function PlaylistPage() {
     judul: '',
     deskripsi: ''
   })
-  const [error, setError] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [playlistToDelete, setPlaylistToDelete] = useState<Playlist | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -52,8 +55,7 @@ export default function PlaylistPage() {
       const data = await playlistAPI.getUserPlaylists()
       setPlaylists(data.playlists || [])
     } catch (error) {
-      console.error('Failed to load playlists:', error)
-      setError('Failed to load playlists')
+      showToast('Failed to load playlists', 'error')
     } finally {
       setLoading(false)
     }
@@ -61,27 +63,34 @@ export default function PlaylistPage() {
 
   const handleCreatePlaylist = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
 
     try {
       await playlistAPI.createPlaylist(createForm)
       setCreateForm({ judul: '', deskripsi: '' })
       setShowCreateForm(false)
-      loadPlaylists()
+      await loadPlaylists()
+      showToast('Playlist created successfully!', 'success')
     } catch (error: any) {
-      setError(error.message || 'Failed to create playlist')
+      showToast(error.message || 'Failed to create playlist', 'error')
     }
   }
 
   const handleDeletePlaylist = async (playlistId: string) => {
-    if (!confirm('Are you sure you want to delete this playlist?')) return
-
     try {
       await playlistAPI.deletePlaylist(playlistId)
-      loadPlaylists()
+      await loadPlaylists()
+      showToast('Playlist deleted successfully!', 'success')
     } catch (error: any) {
-      setError(error.message || 'Failed to delete playlist')
+      showToast(error.message || 'Failed to delete playlist', 'error')
     }
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (playlistToDelete) {
+      await handleDeletePlaylist(playlistToDelete.id)
+      setPlaylistToDelete(null)
+    }
+    setShowDeleteConfirm(false)
   }
 
   const formatDate = (dateString: string) => {
@@ -122,17 +131,14 @@ export default function PlaylistPage() {
           </div>
         </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-            <p className="text-red-200">{error}</p>
-          </div>
-        )}
-
         {/* Create Playlist Form */}
         {showCreateForm && (
-          <Card className="mb-6 bg-gray-900/50 border-gray-800">
+          <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
             <CardHeader>
-              <CardTitle className="text-white">Tambah Playlist</CardTitle>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Plus className="w-5 h-5 text-green-400" />
+                Tambah Playlist
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreatePlaylist} className="space-y-4">
@@ -185,7 +191,7 @@ export default function PlaylistPage() {
 
         {/* Playlists List */}
         {playlists.length === 0 ? (
-          <Card className="bg-gradient-to-br from-gray-900/50 to-gray-800/50 border-gray-700">
+          <Card className="bg-gray-900/80 border-0 shadow-md">
             <CardContent className="text-center py-16">
               <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Library className="w-10 h-10 text-green-400" />
@@ -256,7 +262,7 @@ export default function PlaylistPage() {
             </div>
 
             {/* Playlists Table */}
-            <Card className="bg-gray-900/50 border-gray-800">
+            <Card className="bg-gray-900/80 border-0 shadow-md">
               <CardHeader>
                 <CardTitle className="text-white flex items-center">
                   <Library className="w-5 h-5 mr-2 text-green-400" />
@@ -330,7 +336,10 @@ export default function PlaylistPage() {
                                 size="sm" 
                                 variant="outline"
                                 className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
-                                onClick={() => handleDeletePlaylist(playlist.id)}
+                                onClick={() => {
+                                  setPlaylistToDelete(playlist)
+                                  setShowDeleteConfirm(true)
+                                }}
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -345,6 +354,20 @@ export default function PlaylistPage() {
             </Card>
           </div>
         )}
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={() => {
+            setShowDeleteConfirm(false)
+            setPlaylistToDelete(null)
+          }}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Playlist"
+          message={`Are you sure you want to delete "${playlistToDelete?.judul}"? This action cannot be undone.`}
+          type="delete"
+          confirmText="Delete Playlist"
+        />
       </div>
     </div>
   )

@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, useToast } from '@/contexts/AuthContext'
 import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -37,13 +37,13 @@ interface Podcast {
 
 export default function PodcastDetailPage() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const router = useRouter()
   const params = useParams()
   const podcastId = params.id as string
   
   const [podcast, setPodcast] = useState<Podcast | null>(null)
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
 
   useEffect(() => {
     if (!user) {
@@ -63,8 +63,7 @@ export default function PodcastDetailPage() {
       }
       setPodcast(podcastData)
     } catch (error) {
-      console.error('Failed to load podcast data:', error)
-      setError('Failed to load podcast data')
+      showToast('Failed to load podcast data', 'error')
     } finally {
       setLoading(false)
     }
@@ -73,9 +72,9 @@ export default function PodcastDetailPage() {
   const handlePlayEpisode = async (episodeId: string) => {
     try {
       await podcastAPI.playPodcastEpisode(podcastId, episodeId)
-      console.log('Playing episode:', episodeId)
+      showToast('Episode played successfully!', 'success')
     } catch (error: any) {
-      setError(error.message || 'Failed to play episode')
+      showToast(error.message || 'Failed to play episode', 'error')
     }
   }
 
@@ -111,8 +110,8 @@ export default function PodcastDetailPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-400 mb-4">Error</h1>
-          <p className="text-gray-400 mb-4">{error || 'Podcast not found'}</p>
+          <h1 className="text-2xl font-bold text-red-400 mb-4">Podcast Not Found</h1>
+          <p className="text-gray-400 mb-4">The podcast you're looking for doesn't exist or has been removed.</p>
           <Button 
             onClick={() => router.push('/search')}
             className="btn-spotify"
@@ -139,16 +138,13 @@ export default function PodcastDetailPage() {
           </Button>
         </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-            <p className="text-red-200">{error}</p>
-          </div>
-        )}
-
         {/* Podcast Information */}
-        <Card className="mb-6 bg-gray-900/50 border-gray-800">
+        <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="text-white text-2xl">{podcast.judul}</CardTitle>
+            <CardTitle className="text-white text-2xl flex items-center gap-2">
+              <Mic className="w-6 h-6 text-blue-400" />
+              {podcast.judul}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -183,9 +179,12 @@ export default function PodcastDetailPage() {
         </Card>
 
         {/* Episodes List */}
-        <Card className="bg-gray-900/50 border-gray-800">
+        <Card className="bg-gray-900/80 border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="text-white">Daftar Episode</CardTitle>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Mic className="w-5 h-5 text-blue-400" />
+              Daftar Episode
+            </CardTitle>
           </CardHeader>
           <CardContent>
             {podcast.episodes.length === 0 ? (

@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, useToast } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { albumAPI } from '@/lib/api'
 import { 
   Plus, 
@@ -37,6 +38,7 @@ interface Song {
 
 export default function AlbumPage() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const router = useRouter()
   const [albums, setAlbums] = useState<Album[]>([])
   const [loading, setLoading] = useState(true)
@@ -51,7 +53,8 @@ export default function AlbumPage() {
     judul: '',
     durasi: 0
   })
-  const [error, setError] = useState('')
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [albumToDelete, setAlbumToDelete] = useState<Album | null>(null)
 
   useEffect(() => {
     if (!user) {
@@ -72,8 +75,7 @@ export default function AlbumPage() {
       const data = await albumAPI.getUserAlbums()
       setAlbums(data.albums || [])
     } catch (error) {
-      console.error('Failed to load albums:', error)
-      setError('Failed to load albums')
+      showToast('Failed to load albums', 'error')
     } finally {
       setLoading(false)
     }
@@ -81,15 +83,15 @@ export default function AlbumPage() {
 
   const handleCreateAlbum = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError('')
 
     try {
       await albumAPI.createAlbum(createForm)
       setCreateForm({ judul: '', label: '' })
       setShowCreateForm(false)
-      loadAlbums()
+      await loadAlbums()
+      showToast('Album created successfully!', 'success')
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Failed to create album')
+      showToast(error instanceof Error ? error.message : 'Failed to create album', 'error')
     }
   }
 
@@ -97,27 +99,34 @@ export default function AlbumPage() {
     e.preventDefault()
     if (!selectedAlbum) return
 
-    setError('')
     try {
       await albumAPI.addSong(selectedAlbum.id, songForm)
       setSongForm({ judul: '', durasi: 0 })
       setShowSongForm(false)
       setSelectedAlbum(null)
-      loadAlbums()
+      await loadAlbums()
+      showToast('Song added successfully!', 'success')
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Failed to add song')
+      showToast(error instanceof Error ? error.message : 'Failed to add song', 'error')
     }
   }
 
   const handleDeleteAlbum = async (albumId: string) => {
-    if (!confirm('Are you sure you want to delete this album?')) return
-
     try {
       await albumAPI.deleteAlbum(albumId)
-      loadAlbums()
+      await loadAlbums()
+      showToast('Album deleted successfully!', 'success')
     } catch (error: unknown) {
-      setError(error instanceof Error ? error.message : 'Failed to delete album')
+      showToast(error instanceof Error ? error.message : 'Failed to delete album', 'error')
     }
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (albumToDelete) {
+      await handleDeleteAlbum(albumToDelete.id)
+      setAlbumToDelete(null)
+    }
+    setShowDeleteConfirm(false)
   }
 
   const formatDuration = (minutes: number) => {
@@ -176,17 +185,14 @@ export default function AlbumPage() {
           </div>
         </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-            <p className="text-red-200">{error}</p>
-          </div>
-        )}
-
         {/* Create Album Form */}
         {showCreateForm && (
-          <Card className="mb-6 bg-gray-900/50 border-gray-800">
+          <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
             <CardHeader>
-              <CardTitle className="text-white">Create New Album</CardTitle>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Plus className="w-5 h-5 text-green-400" />
+                Create New Album
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreateAlbum} className="space-y-4">
@@ -241,9 +247,12 @@ export default function AlbumPage() {
 
         {/* Add Song Form */}
         {showSongForm && selectedAlbum && (
-          <Card className="mb-6 bg-gray-900/50 border-gray-800">
+          <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
             <CardHeader>
-              <CardTitle className="text-white">Add Song to &ldquo;{selectedAlbum.judul}&rdquo;</CardTitle>
+              <CardTitle className="text-white flex items-center gap-2">
+                <PlusCircle className="w-5 h-5 text-green-400" />
+                Add Song to &ldquo;{selectedAlbum.judul}&rdquo;
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleAddSong} className="space-y-4">
@@ -300,9 +309,9 @@ export default function AlbumPage() {
 
         {/* Albums List */}
         {albums.length === 0 ? (
-          <Card className="bg-gray-900/50 border-gray-800">
+          <Card className="bg-gray-900/80 border-0 shadow-md">
             <CardContent className="text-center py-12">
-              <Music className="w-16 h-16 text-gray-600 mx-auto mb-4" />
+              <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-white mb-2">No Albums Yet</h3>
               <p className="text-gray-400 mb-4">You haven&apos;t created any albums yet.</p>
               <Button 
@@ -317,7 +326,7 @@ export default function AlbumPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {albums.map((album) => (
-              <Card key={album.id} className="bg-gray-900/50 border-gray-800 hover:border-green-500/50 transition-all">
+              <Card key={album.id} className="bg-gray-900/80 border-0 shadow-md hover:border-green-500/50 transition-all">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -358,7 +367,10 @@ export default function AlbumPage() {
                       size="sm" 
                       variant="outline"
                       className="border-gray-600 text-white hover:bg-gray-800"
-                      onClick={() => handleDeleteAlbum(album.id)}
+                      onClick={() => {
+                        setAlbumToDelete(album)
+                        setShowDeleteConfirm(true)
+                      }}
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>
@@ -383,6 +395,20 @@ export default function AlbumPage() {
             ))}
           </div>
         )}
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={() => {
+            setShowDeleteConfirm(false)
+            setAlbumToDelete(null)
+          }}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Album"
+          message={`Are you sure you want to delete "${albumToDelete?.judul}"? This action cannot be undone.`}
+          type="delete"
+          confirmText="Delete Album"
+        />
       </div>
     </div>
   )

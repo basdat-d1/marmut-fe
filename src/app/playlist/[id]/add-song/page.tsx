@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, useToast } from '@/contexts/AuthContext'
 import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -32,6 +32,7 @@ interface Playlist {
 
 export default function AddSongToPlaylistPage() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const router = useRouter()
   const params = useParams()
   const playlistId = params.id as string
@@ -42,8 +43,6 @@ export default function AddSongToPlaylistPage() {
   const [filteredSongs, setFilteredSongs] = useState<Song[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingSongs, setLoadingSongs] = useState(false)
-  const [error, setError] = useState('')
-  const [successMessage, setSuccessMessage] = useState('')
 
   useEffect(() => {
     if (!user) {
@@ -102,8 +101,7 @@ export default function AddSongToPlaylistPage() {
       setAvailableSongs(mockSongs)
       setFilteredSongs(mockSongs)
     } catch (error) {
-      console.error('Failed to load playlist data:', error)
-      setError('Failed to load playlist data')
+      showToast('Failed to load playlist data', 'error')
     } finally {
       setLoading(false)
     }
@@ -113,13 +111,16 @@ export default function AddSongToPlaylistPage() {
     try {
       setLoadingSongs(true)
       await playlistAPI.addSongToPlaylist(playlistId, songId)
-      setSuccessMessage(`Berhasil menambahkan lagu "${songTitle}" ke playlist!`)
-      setTimeout(() => setSuccessMessage(''), 3000)
+      showToast(`Berhasil menambahkan lagu "${songTitle}" ke playlist!`, 'success')
       // Remove song from available list
       setAvailableSongs(prev => prev.filter(song => song.id !== songId))
       setFilteredSongs(prev => prev.filter(song => song.id !== songId))
     } catch (error: any) {
-      setError(error.message || 'Failed to add song to playlist')
+      if (error.message?.includes('already')) {
+        showToast(`Lagu "${songTitle}" sudah ada di playlist ini!`, 'info')
+      } else {
+        showToast(error.message || 'Failed to add song to playlist', 'error')
+      }
     } finally {
       setLoadingSongs(false)
     }
@@ -146,8 +147,8 @@ export default function AddSongToPlaylistPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-400 mb-4">Error</h1>
-          <p className="text-gray-400 mb-4">{error || 'Playlist not found'}</p>
+          <h1 className="text-2xl font-bold text-red-400 mb-4">Playlist Not Found</h1>
+          <p className="text-gray-400 mb-4">The playlist you're looking for doesn't exist or has been removed.</p>
           <Button 
             onClick={() => router.push('/playlist')}
             className="btn-spotify"
@@ -174,29 +175,22 @@ export default function AddSongToPlaylistPage() {
           </Button>
         </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-            <p className="text-red-200">{error}</p>
-          </div>
-        )}
 
-        {successMessage && (
-          <div className="mb-4 p-4 bg-green-500/20 border border-green-500/50 rounded-lg">
-            <p className="text-green-200">{successMessage}</p>
-          </div>
-        )}
 
         {/* Playlist Info */}
-        <Card className="mb-6 bg-gray-900/50 border-gray-800">
+        <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="text-white text-2xl">Tambah Lagu ke Playlist</CardTitle>
+            <CardTitle className="text-white text-2xl flex items-center gap-2">
+              <Plus className="w-6 h-6 text-green-400" />
+              Tambah Lagu ke Playlist
+            </CardTitle>
             <p className="text-gray-400">Playlist: {playlist.judul}</p>
             <p className="text-gray-400">{playlist.deskripsi}</p>
           </CardHeader>
         </Card>
 
         {/* Search */}
-        <Card className="mb-6 bg-gray-900/50 border-gray-800">
+        <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
           <CardContent className="p-6">
             <div className="flex space-x-4">
               <div className="flex-1">
@@ -220,7 +214,7 @@ export default function AddSongToPlaylistPage() {
         </Card>
 
         {/* Available Songs */}
-        <Card className="bg-gray-900/50 border-gray-800">
+        <Card className="bg-gray-900/80 border-0 shadow-md">
           <CardHeader>
             <CardTitle className="text-white flex items-center">
               <Music className="w-5 h-5 mr-2 text-green-400" />

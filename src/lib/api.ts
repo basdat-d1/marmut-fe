@@ -45,7 +45,7 @@ async function apiRequest(url: string, options: RequestInit = {}) {
     
     // Handle specific status codes
     if (response.status === 401) {
-      errorMessage = 'Authentication required. Please log in again.'
+      errorMessage = 'Incorrect email or password. Please enter the correct credentials.'
     } else if (response.status === 403) {
       errorMessage = 'Access denied. You do not have permission to perform this action.'
     } else if (response.status === 404) {

@@ -1,11 +1,12 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, useToast } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { subscriptionAPI } from '@/lib/api'
 import { 
   Package, 
@@ -35,6 +36,7 @@ interface Transaction {
 
 export default function SubscriptionPage() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const router = useRouter()
   const [packages, setPackages] = useState<Package[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
@@ -44,7 +46,7 @@ export default function SubscriptionPage() {
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null)
   const [paymentMethod, setPaymentMethod] = useState('')
   const [showHistory, setShowHistory] = useState(false)
-  const [error, setError] = useState('')
+  const [showCancelConfirm, setShowCancelConfirm] = useState(false)
 
   useEffect(() => {
     if (!user) {
@@ -64,8 +66,7 @@ export default function SubscriptionPage() {
       setPackages(packagesData.packages || [])
       setCurrentSubscription(subscriptionData.subscription || null)
     } catch (error) {
-      console.error('Failed to load subscription data:', error)
-      setError('Failed to load subscription data')
+      showToast('Failed to load subscription data', 'error')
     } finally {
       setLoading(false)
     }
@@ -89,25 +90,27 @@ export default function SubscriptionPage() {
       setShowPaymentForm(false)
       setSelectedPackage(null)
       setPaymentMethod('')
-      loadData() // Refresh data
+      await loadData() // Refresh data
       
-      // Show success message
-      alert('Subscription successful!')
+      showToast('Subscription successful!', 'success')
     } catch (error: any) {
-      setError(error.message || 'Failed to subscribe')
+      showToast(error.message || 'Failed to subscribe', 'error')
     }
   }
 
   const handleCancelSubscription = async () => {
-    if (!confirm('Are you sure you want to cancel your subscription?')) return
-
     try {
       await subscriptionAPI.cancelSubscription()
-      loadData() // Refresh data
-      alert('Subscription cancelled successfully!')
+      await loadData() // Refresh data
+      showToast('Subscription cancelled successfully!', 'success')
     } catch (error: any) {
-      setError(error.message || 'Failed to cancel subscription')
+      showToast(error.message || 'Failed to cancel subscription', 'error')
     }
+  }
+
+  const handleCancelConfirm = async () => {
+    await handleCancelSubscription()
+    setShowCancelConfirm(false)
   }
 
   const loadTransactionHistory = async () => {
@@ -116,8 +119,7 @@ export default function SubscriptionPage() {
       setTransactions(data.transactions || [])
       setShowHistory(true)
     } catch (error) {
-      console.error('Failed to load transaction history:', error)
-      setError('Failed to load transaction history')
+      showToast('Failed to load transaction history', 'error')
     }
   }
 
@@ -152,12 +154,6 @@ export default function SubscriptionPage() {
           <p className="text-gray-400">Choose your subscription plan</p>
         </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-            <p className="text-red-200">{error}</p>
-          </div>
-        )}
-
         {/* Current Subscription Status */}
         {currentSubscription && (
           <Card className="mb-6 bg-gradient-to-br from-green-900/50 to-green-800/50 border-green-500/50">
@@ -184,7 +180,7 @@ export default function SubscriptionPage() {
               </div>
               <div className="mt-4 flex space-x-2">
                 <Button 
-                  onClick={handleCancelSubscription}
+                  onClick={() => setShowCancelConfirm(true)}
                   variant="outline"
                   className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
                 >
@@ -428,6 +424,17 @@ export default function SubscriptionPage() {
             </CardContent>
           </Card>
         )}
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showCancelConfirm}
+          onClose={() => setShowCancelConfirm(false)}
+          onConfirm={handleCancelConfirm}
+          title="Cancel Subscription"
+          message="Are you sure you want to cancel your subscription? This action cannot be undone."
+          type="delete"
+          confirmText="Cancel Subscription"
+        />
       </div>
     </div>
   )

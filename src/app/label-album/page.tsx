@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, useToast } from '@/contexts/AuthContext'
 import { Input } from '@/components/ui/input'
 import { Card, CardContent } from '@/components/ui/card'
 import { albumAPI } from '@/lib/api'
@@ -18,10 +18,10 @@ interface Album {
 
 export default function LabelAlbumPage() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const [albums, setAlbums] = useState<Album[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
 
   useEffect(() => {
     if (!user) {
@@ -40,8 +40,7 @@ export default function LabelAlbumPage() {
       const data = await albumAPI.getLabelAlbums()
       setAlbums(data.albums || [])
     } catch (error) {
-      console.error('Failed to load albums:', error)
-      setError('Failed to load albums')
+      showToast('Failed to load albums', 'error')
     } finally {
       setLoading(false)
     }
@@ -84,12 +83,6 @@ export default function LabelAlbumPage() {
           <p className="text-gray-400">Albums published under your label</p>
         </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-            <p className="text-red-200">{error}</p>
-          </div>
-        )}
-
         {/* Search */}
         <div className="mb-6">
           <div className="relative">
@@ -107,7 +100,7 @@ export default function LabelAlbumPage() {
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="glass border-gray-800 animate-pulse">
+              <Card key={i} className="bg-gray-900/80 border-0 shadow-md animate-pulse">
                 <div className="aspect-square bg-gray-700 rounded-t-lg"></div>
                 <CardContent className="p-4">
                   <div className="h-4 bg-gray-700 rounded mb-2"></div>
@@ -116,10 +109,18 @@ export default function LabelAlbumPage() {
               </Card>
             ))}
           </div>
+        ) : filteredAlbums.length === 0 ? (
+          <div className="text-center py-12">
+            <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+            <h3 className="text-xl font-semibold text-white mb-2">No albums found</h3>
+            <p className="text-gray-400 mb-6">
+              {searchTerm ? 'Try adjusting your search terms' : 'No albums are published under your label yet'}
+            </p>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredAlbums.map((album) => (
-              <Card key={album.id} className="glass border-gray-800 hover:border-green-500/50 transition-all group">
+              <Card key={album.id} className="bg-gray-900/80 border-0 shadow-md hover:border-green-500/50 transition-all group">
                 <div className="aspect-square bg-gradient-to-br from-green-600 to-green-800 rounded-t-lg flex items-center justify-center">
                   <Music className="w-16 h-16 text-white/80" />
                 </div>
@@ -135,16 +136,6 @@ export default function LabelAlbumPage() {
                 </CardContent>
               </Card>
             ))}
-          </div>
-        )}
-
-        {!loading && filteredAlbums.length === 0 && (
-          <div className="text-center py-12">
-            <Music className="w-16 h-16 text-gray-600 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-gray-400 mb-2">No albums found</h3>
-            <p className="text-gray-500 mb-6">
-              {searchTerm ? 'Try adjusting your search terms' : 'No albums are published under your label yet'}
-            </p>
           </div>
         )}
       </div>

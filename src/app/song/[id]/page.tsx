@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, useToast } from '@/contexts/AuthContext'
 import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -43,6 +43,7 @@ interface Playlist {
 
 export default function SongDetailPage() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const router = useRouter()
   const params = useParams()
   const songId = params.id as string
@@ -53,8 +54,6 @@ export default function SongDetailPage() {
   const [playProgress, setPlayProgress] = useState(0)
   const [showAddToPlaylist, setShowAddToPlaylist] = useState(false)
   const [selectedPlaylist, setSelectedPlaylist] = useState('')
-  const [showSuccessMessage, setShowSuccessMessage] = useState('')
-  const [error, setError] = useState('')
   const [showDownloadConfirm, setShowDownloadConfirm] = useState(false)
   const [showAddToPlaylistConfirm, setShowAddToPlaylistConfirm] = useState(false)
 
@@ -72,12 +71,10 @@ export default function SongDetailPage() {
         songAPI.getSong(songId),
         playlistAPI.getUserPlaylists()
       ])
-      
       setSong(songData.song)
       setPlaylists(playlistsData.playlists || [])
     } catch (error) {
-      console.error('Failed to load song data:', error)
-      setError('Failed to load song data')
+      showToast('Failed to load song data', 'error')
     } finally {
       setLoading(false)
     }
@@ -85,85 +82,59 @@ export default function SongDetailPage() {
 
   const handlePlay = async () => {
     if (playProgress < 70) {
-      alert('You need to listen to at least 70% of the song to count as a play')
+      showToast('You need to listen to at least 70% of the song to count as a play', 'warning')
       return
     }
-
     try {
       await songAPI.playSong(songId, playProgress)
-      // Refresh song data to update total plays
-      loadSongData()
-      setShowSuccessMessage('Song played successfully!')
-      setTimeout(() => setShowSuccessMessage(''), 3000)
+      await loadSongData()
+      showToast('Song played successfully!', 'success')
     } catch (error: any) {
-      setError(error.message || 'Failed to play song')
+      showToast(error.message || 'Failed to play song', 'error')
     }
   }
 
   const handleAddToPlaylist = async () => {
     if (!selectedPlaylist) {
-      alert('Please select a playlist')
+      showToast('Please select a playlist', 'warning')
       return
     }
-
     try {
       await playlistAPI.addSongToPlaylist(selectedPlaylist, songId)
       setShowAddToPlaylist(false)
       setSelectedPlaylist('')
-      setShowSuccessMessage(`Berhasil menambahkan Lagu dengan judul '${song?.judul}' ke '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`)
-      setTimeout(() => setShowSuccessMessage(''), 5000)
+      showToast(`Berhasil menambahkan Lagu dengan judul '${song?.judul}' ke '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`, 'success')
     } catch (error: any) {
       if (error.message?.includes('already')) {
-        setShowSuccessMessage(`Lagu dengan judul '${song?.judul}' sudah ditambahkan di '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`)
+        showToast(`Lagu dengan judul '${song?.judul}' sudah ditambahkan di '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`, 'info')
       } else {
-        setError(error.message || 'Failed to add song to playlist')
+        showToast(error.message || 'Failed to add song to playlist', 'error')
       }
-      setTimeout(() => setShowSuccessMessage(''), 5000)
     }
   }
 
   const handleAddToPlaylistConfirm = async () => {
-    if (!selectedPlaylist) {
-      alert('Please select a playlist')
-      return
-    }
-
-    try {
-      await playlistAPI.addSongToPlaylist(selectedPlaylist, songId)
-      setShowAddToPlaylist(false)
-      setSelectedPlaylist('')
-      setShowSuccessMessage(`Berhasil menambahkan Lagu dengan judul '${song?.judul}' ke '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`)
-      setTimeout(() => setShowSuccessMessage(''), 5000)
-    } catch (error: any) {
-      if (error.message?.includes('already')) {
-        setShowSuccessMessage(`Lagu dengan judul '${song?.judul}' sudah ditambahkan di '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`)
-      } else {
-        setError(error.message || 'Failed to add song to playlist')
-      }
-      setTimeout(() => setShowSuccessMessage(''), 5000)
-    }
+    await handleAddToPlaylist()
+    setShowAddToPlaylistConfirm(false)
   }
 
   const handleDownload = async () => {
     if (!user?.is_premium) {
-      alert('Download feature is only available for premium users')
+      showToast('Download feature is only available for premium users', 'warning')
       return
     }
-
     try {
       await songAPI.downloadSong(songId)
-      // Refresh song data to update total downloads
-      loadSongData()
-      setShowSuccessMessage(`Berhasil mengunduh Lagu dengan judul '${song?.judul}'!`)
-      setTimeout(() => setShowSuccessMessage(''), 5000)
+      await loadSongData()
+      showToast(`Berhasil mengunduh Lagu dengan judul '${song?.judul}'!`, 'success')
     } catch (error: any) {
       if (error.message?.includes('already')) {
-        setShowSuccessMessage(`Lagu dengan judul '${song?.judul}' sudah pernah di unduh!`)
+        showToast(`Lagu dengan judul '${song?.judul}' sudah pernah di unduh!`, 'info')
       } else {
-        setError(error.message || 'Failed to download song')
+        showToast(error.message || 'Failed to download song', 'error')
       }
-      setTimeout(() => setShowSuccessMessage(''), 5000)
     }
+    setShowDownloadConfirm(false)
   }
 
   const formatDate = (dateString: string) => {
@@ -189,8 +160,8 @@ export default function SongDetailPage() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
         <div className="text-center">
-          <h1 className="text-2xl font-bold text-red-400 mb-4">Error</h1>
-          <p className="text-gray-400 mb-4">{error || 'Song not found'}</p>
+          <h1 className="text-2xl font-bold text-red-400 mb-4">Song Not Found</h1>
+          <p className="text-gray-400 mb-4">The song you're looking for doesn't exist or has been removed.</p>
           <Button 
             onClick={() => router.push('/search')}
             className="btn-spotify"
@@ -217,22 +188,13 @@ export default function SongDetailPage() {
           </Button>
         </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-            <p className="text-red-200">{error}</p>
-          </div>
-        )}
-
-        {showSuccessMessage && (
-          <div className="mb-4 p-4 bg-green-500/20 border border-green-500/50 rounded-lg">
-            <p className="text-green-200">{showSuccessMessage}</p>
-          </div>
-        )}
-
         {/* Song Information */}
-        <Card className="mb-6 bg-gray-900/50 border-gray-800">
+        <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="text-white text-2xl">{song.judul}</CardTitle>
+            <CardTitle className="text-white text-2xl flex items-center gap-2">
+              <Music className="w-6 h-6 text-green-400" />
+              {song.judul}
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -291,9 +253,12 @@ export default function SongDetailPage() {
         </Card>
 
         {/* Audio Player */}
-        <Card className="mb-6 bg-gray-900/50 border-gray-800">
+        <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
           <CardHeader>
-            <CardTitle className="text-white">Audio Player</CardTitle>
+            <CardTitle className="text-white flex items-center gap-2">
+              <Volume2 className="w-5 h-5 text-green-400" />
+              Audio Player
+            </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             {/* Progress Bar */}
@@ -351,9 +316,12 @@ export default function SongDetailPage() {
 
         {/* Add to Playlist Modal */}
         {showAddToPlaylist && (
-          <Card className="mb-6 bg-gray-900/50 border-gray-800">
+          <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
             <CardHeader>
-              <CardTitle className="text-white">Add Song to User Playlist</CardTitle>
+              <CardTitle className="text-white flex items-center gap-2">
+                <Plus className="w-5 h-5 text-green-400" />
+                Add Song to User Playlist
+              </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div>
@@ -409,7 +377,7 @@ export default function SongDetailPage() {
           onClose={() => setShowDownloadConfirm(false)}
           onConfirm={handleDownload}
           title="Download Song"
-          message={`Are you sure you want to download "${song?.judul}" by ${song?.artist}?`}
+          message={`Are you sure you want to download \"${song?.judul}\" by ${song?.artist}?`}
           type="download"
           confirmText="Download"
         />
@@ -419,7 +387,7 @@ export default function SongDetailPage() {
           onClose={() => setShowAddToPlaylistConfirm(false)}
           onConfirm={handleAddToPlaylistConfirm}
           title="Add to Playlist"
-          message={`Are you sure you want to add "${song?.judul}" to "${playlists.find(p => p.id === selectedPlaylist)?.judul}"?`}
+          message={`Are you sure you want to add \"${song?.judul}\" to \"${playlists.find(p => p.id === selectedPlaylist)?.judul}\"?`}
           type="add"
           confirmText="Add to Playlist"
         />

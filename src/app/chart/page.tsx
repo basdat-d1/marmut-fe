@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from 'react'
-import { useAuth } from '@/contexts/AuthContext'
+import { useAuth, useToast } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -32,13 +32,13 @@ interface ChartSong {
 
 export default function ChartPage() {
   const { user } = useAuth()
+  const { showToast } = useToast()
   const router = useRouter()
   const [charts, setCharts] = useState<Chart[]>([])
   const [selectedChart, setSelectedChart] = useState<Chart | null>(null)
   const [chartSongs, setChartSongs] = useState<ChartSong[]>([])
   const [loading, setLoading] = useState(true)
   const [loadingSongs, setLoadingSongs] = useState(false)
-  const [error, setError] = useState('')
 
   useEffect(() => {
     if (!user) {
@@ -57,8 +57,7 @@ export default function ChartPage() {
       }))
       setCharts(chartObjects)
     } catch (error) {
-      console.error('Failed to load charts:', error)
-      setError('Failed to load charts')
+      showToast('Failed to load charts', 'error')
     } finally {
       setLoading(false)
     }
@@ -85,8 +84,7 @@ export default function ChartPage() {
       }
       setChartSongs(songs)
     } catch (error) {
-      console.error('Failed to load chart songs:', error)
-      setError('Failed to load chart songs')
+      showToast('Failed to load chart songs', 'error')
     } finally {
       setLoadingSongs(false)
     }
@@ -98,7 +96,7 @@ export default function ChartPage() {
 
   const handlePlaySong = (songId: string) => {
     // Handle play functionality
-    console.log('Playing song:', songId)
+    
   }
 
   const formatDate = (dateString: string) => {
@@ -137,17 +135,14 @@ export default function ChartPage() {
           <p className="text-gray-400">Discover the most popular music</p>
         </div>
 
-        {error && (
-          <div className="mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg">
-            <p className="text-red-200">{error}</p>
-          </div>
-        )}
-
         {/* Charts List */}
         {!selectedChart && (
-          <Card className="bg-gray-900/50 border-gray-800">
+          <Card className="bg-gray-900/80 border-0 shadow-md">
             <CardHeader>
-              <CardTitle className="text-white">Available Charts</CardTitle>
+              <CardTitle className="text-white flex items-center gap-2">
+                <BarChart3 className="w-5 h-5 text-green-400" />
+                Available Charts
+              </CardTitle>
             </CardHeader>
             <CardContent>
               {charts.length === 0 ? (
@@ -214,9 +209,12 @@ export default function ChartPage() {
               </Button>
             </div>
 
-            <Card className="bg-gray-900/50 border-gray-800">
+            <Card className="bg-gray-900/80 border-0 shadow-md">
               <CardHeader>
-                <CardTitle className="text-white">Chart Detail</CardTitle>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <BarChart3 className="w-5 h-5 text-green-400" />
+                  Chart Detail
+                </CardTitle>
                 <p className="text-gray-400">Tipe: {selectedChart.tipe}</p>
               </CardHeader>
               <CardContent>
