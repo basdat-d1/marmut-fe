@@ -322,7 +322,7 @@ export default function PlaylistPage() {
                                 onClick={() => router.push(`/playlist/${playlist.id}`)}
                               >
                                 <Eye className="w-4 h-4 mr-1" />
-                                View
+                                Detail
                               </Button>
                               <Button 
                                 size="sm" 

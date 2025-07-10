@@ -159,63 +159,83 @@ export default function PlaylistDetailPage() {
           </Button>
         </div>
 
-        {/* Playlist Information */}
-        <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
+        {/* Playlist Information and Songs - 2 Column Layout */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Left Column - Playlist Information */}
+          <Card className="bg-gray-900/80 border-0 shadow-md relative">
           <CardHeader>
-            <CardTitle className="text-white text-2xl flex items-center gap-2">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <CardTitle className="text-white text-2xl flex items-center gap-2 mb-2">
               <Music className="w-6 h-6 text-green-400" />
               {playlistDetail.playlist.judul}
             </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-              <div className="flex items-center space-x-2">
-                <User className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-400">Pembuat:</span>
-                <span className="text-white">{playlistDetail.playlist.email_pembuat}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Music className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-400">Jumlah Lagu:</span>
-                <span className="text-white">{playlistDetail.playlist.jumlah_lagu}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Clock className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-400">Total Durasi:</span>
-                <span className="text-white">{playlistDetail.playlist.total_durasi}</span>
-              </div>
-              <div className="flex items-center space-x-2">
-                <Calendar className="w-4 h-4 text-gray-400" />
-                <span className="text-gray-400">Tanggal Dibuat:</span>
-                <span className="text-white">{formatDate(playlistDetail.playlist.tanggal_dibuat)}</span>
-              </div>
+                  <p className="text-gray-400 text-sm">{playlistDetail.playlist.deskripsi}</p>
             </div>
-            <div>
-              <p className="text-gray-400">{playlistDetail.playlist.deskripsi}</p>
-            </div>
-            <div className="flex space-x-2">
-              <Button 
-                onClick={handleShufflePlay}
-                className="btn-spotify"
-              >
-                <Shuffle className="w-4 h-4 mr-2" />
-                Shuffle Play
-              </Button>
               {playlistDetail.playlist.email_pembuat === user?.email && (
                 <Button 
                   onClick={() => router.push(`/playlist/${playlistId}/edit`)}
                   variant="outline"
-                  className="border-gray-700 text-white hover:bg-gray-800"
+                    size="sm"
+                    className="border-gray-700 text-white hover:bg-gray-800 ml-4"
                 >
                   <Edit className="w-4 h-4 mr-2" />
                   Edit Playlist
                 </Button>
               )}
             </div>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* Playlist Details - Vertical Layout */}
+              <div className="space-y-3">
+                <div className="flex items-center space-x-3">
+                  <User className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <div>
+                    <span className="text-gray-400 text-sm">Pembuat</span>
+                    <p className="text-white font-medium">{playlistDetail.playlist.email_pembuat}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <Music className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <div>
+                    <span className="text-gray-400 text-sm">Jumlah Lagu</span>
+                    <p className="text-white font-medium">{playlistDetail.playlist.jumlah_lagu} lagu</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <Clock className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <div>
+                    <span className="text-gray-400 text-sm">Total Durasi</span>
+                    <p className="text-white font-medium">{playlistDetail.playlist.total_durasi}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <Calendar className="w-5 h-5 text-gray-400 flex-shrink-0" />
+                  <div>
+                    <span className="text-gray-400 text-sm">Tanggal Dibuat</span>
+                    <p className="text-white font-medium">{formatDate(playlistDetail.playlist.tanggal_dibuat)}</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Shuffle Play Button - Centered */}
+              <div className="flex justify-center pt-4">
+                <Button 
+                  onClick={handleShufflePlay}
+                  className="btn-spotify px-8 py-3 text-lg"
+                  size="lg"
+                >
+                  <Shuffle className="w-5 h-5 mr-3" />
+                  Shuffle Play
+                </Button>
+              </div>
           </CardContent>
         </Card>
 
-        {/* Songs List */}
+          {/* Right Column - Songs List */}
         <Card className="bg-gray-900/80 border-0 shadow-md">
           <CardHeader>
             <div className="flex items-center justify-between">
@@ -226,6 +246,7 @@ export default function PlaylistDetailPage() {
               <Button 
                 onClick={() => router.push(`/playlist/${playlistId}/add-song`)}
                 className="btn-spotify"
+                  size="sm"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Tambah Lagu
@@ -234,51 +255,36 @@ export default function PlaylistDetailPage() {
           </CardHeader>
           <CardContent>
             {playlistDetail.songs.length === 0 ? (
-              <div className="text-center py-8">
-                <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-white mb-2">No Songs Yet</h3>
-                <p className="text-gray-400 mb-4">This playlist doesn't have any songs yet.</p>
+                <div className="text-center py-12">
+                  <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                    <Music className="w-10 h-10 text-green-400" />
+                  </div>
+                  <h3 className="text-xl font-semibold text-white mb-3">Belum Ada Lagu</h3>
+                  <p className="text-gray-400 mb-6 max-w-md mx-auto">Playlist ini belum memiliki lagu. Mulai menambahkan lagu favorit Anda!</p>
                 <Button 
                   onClick={() => router.push(`/playlist/${playlistId}/add-song`)}
-                  className="btn-spotify"
+                    className="btn-spotify px-8 py-3 text-lg"
                 >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add First Song
+                    <Plus className="w-5 h-5 mr-2" />
+                    Tambah Lagu Pertama
                 </Button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-800/50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Judul Lagu
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Oleh
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Durasi
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-800">
-                    {playlistDetail.songs.map((song) => (
-                      <tr key={song.id} className="hover:bg-gray-800/30 transition-colors">
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-white">{song.judul}</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                          {song.artist}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300">
-                          {song.durasi}
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <div className="flex space-x-2">
+                <div className="overflow-y-auto max-h-96">
+                  <div className="space-y-2">
+                    {playlistDetail.songs.map((song, index) => (
+                      <div key={song.id} className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg hover:bg-gray-800/50 transition-colors">
+                        <div className="flex items-center space-x-3 flex-1">
+                          <div className="w-8 h-8 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-lg flex items-center justify-center text-xs font-medium text-green-400">
+                            {index + 1}
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <div className="text-sm font-medium text-white truncate">{song.judul}</div>
+                            <div className="text-xs text-gray-400 truncate">{song.artist} • {song.album}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center space-x-2 ml-4">
+                          <span className="text-xs text-gray-400 mr-12">{song.durasi}</span>
                             <Button 
                               size="sm" 
                               className="btn-spotify"
@@ -308,15 +314,14 @@ export default function PlaylistDetailPage() {
                               </Button>
                             )}
                           </div>
-                        </td>
-                      </tr>
+                      </div>
                     ))}
-                  </tbody>
-                </table>
+                  </div>
               </div>
             )}
           </CardContent>
         </Card>
+        </div>
 
         {/* Confirmation Modal */}
         <ConfirmationModal

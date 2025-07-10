@@ -69,37 +69,12 @@ export default function AddSongToPlaylistPage() {
     try {
       const [playlistData, songsData] = await Promise.all([
         playlistAPI.getPlaylistDetail(playlistId),
-        songAPI.getUserPlaylistsForSong()
+        playlistAPI.getAvailableSongs()
       ])
       
       setPlaylist(playlistData.playlist)
-      // For now, we'll use a mock list of available songs
-      // In a real app, you'd get this from an API
-      const mockSongs: Song[] = [
-        {
-          id: 'song-1',
-          judul: 'Bohemian Rhapsody',
-          artist: 'Queen',
-          album: 'A Night at the Opera',
-          durasi: 354
-        },
-        {
-          id: 'song-2',
-          judul: 'Hotel California',
-          artist: 'Eagles',
-          album: 'Hotel California',
-          durasi: 391
-        },
-        {
-          id: 'song-3',
-          judul: 'Stairway to Heaven',
-          artist: 'Led Zeppelin',
-          album: 'Led Zeppelin IV',
-          durasi: 482
-        }
-      ]
-      setAvailableSongs(mockSongs)
-      setFilteredSongs(mockSongs)
+      setAvailableSongs(songsData.songs || [])
+      setFilteredSongs(songsData.songs || [])
     } catch (error) {
       showToast('Failed to load playlist data', 'error')
     } finally {
@@ -117,9 +92,9 @@ export default function AddSongToPlaylistPage() {
       setFilteredSongs(prev => prev.filter(song => song.id !== songId))
     } catch (error: any) {
       if (error.message?.includes('already')) {
-        showToast(`Lagu "${songTitle}" sudah ada di playlist ini!`, 'info')
+        showToast(`Lagu "${songTitle}" sudah ada di playlist ini!`, 'error')
       } else {
-        showToast(error.message || 'Failed to add song to playlist', 'error')
+        showToast(error.message || 'Gagal menambahkan lagu ke playlist', 'error')
       }
     } finally {
       setLoadingSongs(false)
@@ -185,7 +160,6 @@ export default function AddSongToPlaylistPage() {
               Tambah Lagu ke Playlist
             </CardTitle>
             <p className="text-gray-400">Playlist: {playlist.judul}</p>
-            <p className="text-gray-400">{playlist.deskripsi}</p>
           </CardHeader>
         </Card>
 

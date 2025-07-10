@@ -447,14 +447,6 @@ export const subscriptionAPI = {
     })
   },
 
-  async getSubscriptionHistory() {
-    return apiRequest('/api/subscription/history/')
-  },
-
-  async getSubscriptions() {
-    return apiRequest('/api/subscription/packages/')
-  },
-
   async getTransactionHistory() {
     return apiRequest('/api/subscription/history/')
   },

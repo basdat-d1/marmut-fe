@@ -28,6 +28,7 @@ interface AuthContextType {
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
   register: (userData: any, type: 'user' | 'label') => Promise<void>
+  refreshUser: () => Promise<void>
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
@@ -93,6 +94,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }
 
+  const refreshUser = async () => {
+    try {
+      const response = await authAPI.getCurrentUser()
+      if (response.user) {
+        setUser(response.user)
+      } else if (response.email) {
+        // Handle direct user object response
+        setUser(response)
+      }
+    } catch (error) {
+      console.error('Failed to refresh user:', error)
+    }
+  }
+
   const login = async (email: string, password: string) => {
     try {
       const response = await authAPI.login(email, password)
@@ -142,6 +157,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     login,
     logout,
     register,
+    refreshUser,
   }
 
   return (

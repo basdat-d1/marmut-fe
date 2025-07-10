@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import { useAuth, useToast } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
+import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -17,6 +18,7 @@ import {
   Check,
   ArrowLeft
 } from 'lucide-react'
+import PaymentModal from './PaymentModal'
 
 interface Package {
   jenis: string
@@ -35,17 +37,16 @@ interface Transaction {
 }
 
 export default function SubscriptionPage() {
-  const { user } = useAuth()
+  const { user, refreshUser } = useAuth()
   const { showToast } = useToast()
   const router = useRouter()
   const [packages, setPackages] = useState<Package[]>([])
   const [transactions, setTransactions] = useState<Transaction[]>([])
   const [currentSubscription, setCurrentSubscription] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const [showPaymentForm, setShowPaymentForm] = useState(false)
+  const [showPaymentModal, setShowPaymentModal] = useState(false)
   const [selectedPackage, setSelectedPackage] = useState<Package | null>(null)
   const [paymentMethod, setPaymentMethod] = useState('')
-  const [showHistory, setShowHistory] = useState(false)
   const [showCancelConfirm, setShowCancelConfirm] = useState(false)
 
   useEffect(() => {
@@ -72,30 +73,9 @@ export default function SubscriptionPage() {
     }
   }
 
-  const handleSubscribe = async (pkg: Package) => {
+  const handleSubscribe = (pkg: Package) => {
     setSelectedPackage(pkg)
-    setShowPaymentForm(true)
-  }
-
-  const handlePaymentSubmit = async (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!selectedPackage || !paymentMethod) return
-
-    try {
-      await subscriptionAPI.subscribe({
-        jenis_paket: selectedPackage.jenis,
-        metode_bayar: paymentMethod
-      })
-      
-      setShowPaymentForm(false)
-      setSelectedPackage(null)
-      setPaymentMethod('')
-      await loadData() // Refresh data
-      
-      showToast('Subscription successful!', 'success')
-    } catch (error: any) {
-      showToast(error.message || 'Failed to subscribe', 'error')
-    }
+    setShowPaymentModal(true)
   }
 
   const handleCancelSubscription = async () => {
@@ -117,7 +97,6 @@ export default function SubscriptionPage() {
     try {
       const data = await subscriptionAPI.getTransactionHistory()
       setTransactions(data.transactions || [])
-      setShowHistory(true)
     } catch (error) {
       showToast('Failed to load transaction history', 'error')
     }
@@ -199,14 +178,15 @@ export default function SubscriptionPage() {
                 <Package className="w-5 h-5 mr-2 text-green-400" />
                 Available Packages
               </CardTitle>
+              <Link href="/subscription/history">
               <Button 
-                onClick={loadTransactionHistory}
                 variant="outline"
                 className="border-gray-700 text-white hover:bg-gray-800"
               >
                 <History className="w-4 h-4 mr-2" />
                 Riwayat Transaksi
               </Button>
+              </Link>
             </div>
           </CardHeader>
           <CardContent>
@@ -277,153 +257,43 @@ export default function SubscriptionPage() {
           </CardContent>
         </Card>
 
-        {/* Payment Form */}
-        {showPaymentForm && selectedPackage && (
-          <Card className="mb-6 bg-gray-900/50 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-white">Pembayaran Paket</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="mb-6">
-                <h3 className="text-lg font-medium text-white mb-4">Informasi Paket yang Ingin Dibeli:</h3>
-                <div className="bg-gray-800/50 p-4 rounded-lg">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <p className="text-sm text-gray-400">Jenis</p>
-                      <p className="text-white font-medium">{selectedPackage.jenis}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Harga</p>
-                      <p className="text-white font-medium">{formatCurrency(selectedPackage.harga)}</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              <form onSubmit={handlePaymentSubmit} className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-white mb-2">
-                    Metode Pembayaran
-                  </label>
-                  <select
-                    value={paymentMethod}
-                    onChange={(e) => setPaymentMethod(e.target.value)}
-                    required
-                    className="w-full p-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-green-500"
-                  >
-                    <option value="" className="bg-gray-800">Pilih metode pembayaran</option>
-                    <option value="transfer bank" className="bg-gray-800">Transfer Bank</option>
-                    <option value="kartu kredit" className="bg-gray-800">Kartu Kredit</option>
-                    <option value="e-wallet" className="bg-gray-800">E-Wallet</option>
-                  </select>
-                </div>
-
-                <div className="flex space-x-2">
-                  <Button type="submit" className="btn-spotify">
-                    Submit
-                  </Button>
-                  <Button 
-                    type="button" 
-                    variant="outline"
-                    className="border-gray-700 text-white hover:bg-gray-800"
-                    onClick={() => {
-                      setShowPaymentForm(false)
+        {/* Payment Modal */}
+        <PaymentModal
+          isOpen={showPaymentModal && !!selectedPackage}
+          onClose={() => {
+            setShowPaymentModal(false)
                       setSelectedPackage(null)
                       setPaymentMethod('')
                     }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Transaction History */}
-        {showHistory && (
-          <Card className="bg-gray-900/50 border-gray-800">
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <CardTitle className="text-white">Riwayat Transaksi Paket</CardTitle>
-                <Button 
-                  onClick={() => setShowHistory(false)}
-                  variant="outline"
-                  className="border-gray-700 text-white hover:bg-gray-800"
-                >
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  Kembali
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {transactions.length === 0 ? (
-                <div className="text-center py-8">
-                  <History className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-white mb-2">No Transaction History</h3>
-                  <p className="text-gray-400">You haven't made any transactions yet.</p>
-                </div>
-              ) : (
-                <div className="overflow-x-auto">
-                  <table className="w-full">
-                    <thead className="bg-gray-800/50">
-                      <tr>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Jenis
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Tanggal Dimulai
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Tanggal Berakhir
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Metode Pembayaran
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Nominal
-                        </th>
-                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Status
-                        </th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-800">
-                      {transactions.map((transaction, index) => (
-                        <tr key={index} className="hover:bg-gray-800/30 transition-colors">
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-white text-center">
-                            {transaction.jenis}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
-                            {formatDate(transaction.tanggal_dimulai)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
-                            {formatDate(transaction.tanggal_berakhir)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
-                            {transaction.metode_bayar}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
-                            {transaction.nominal_formatted}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
-                            <span className={`px-2 py-1 rounded-full text-xs ${
-                              transaction.status === 'Aktif' 
-                                ? 'bg-green-500/20 text-green-400' 
-                                : 'bg-gray-500/20 text-gray-400'
-                            }`}>
-                              {transaction.status}
-                            </span>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        )}
+          selectedPackage={selectedPackage}
+          paymentMethod={paymentMethod}
+          setPaymentMethod={setPaymentMethod}
+          onSubmit={async (e: React.FormEvent) => {
+            e.preventDefault()
+            if (!selectedPackage || !paymentMethod) return
+            
+            try {
+              await subscriptionAPI.subscribe({
+                jenis_paket: selectedPackage.jenis,
+                metode_bayar: paymentMethod
+              })
+              
+              setShowPaymentModal(false)
+              setSelectedPackage(null)
+              setPaymentMethod('')
+              
+              // Refresh both subscription data and user context
+              await Promise.all([
+                loadData(),
+                refreshUser()
+              ])
+              
+              showToast('Subscription successful!', 'success')
+            } catch (error: any) {
+              showToast(error.message || 'Failed to subscribe', 'error')
+            }
+          }}
+        />
 
         {/* Confirmation Modal */}
         <ConfirmationModal

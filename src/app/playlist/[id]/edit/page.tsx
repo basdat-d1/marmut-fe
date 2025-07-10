@@ -112,10 +112,11 @@ export default function EditPlaylistPage() {
     setShowDeleteConfirm(false);
   };
 
-  const formatDuration = (minutes: number) => {
-    const hrs = Math.floor(minutes / 60);
-    const mins = minutes % 60;
-    return hrs > 0 ? `${hrs}:${mins.toString().padStart(2, '0')}` : `${mins}:00`;
+  const formatDuration = (seconds: number | undefined | null) => {
+    if (!seconds || isNaN(seconds)) return "0:00";
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}:${remainingSeconds.toString().padStart(2, '0')}`;
   };
 
   if (loading) {
@@ -217,7 +218,7 @@ export default function EditPlaylistPage() {
               </div>
               <div className="text-sm text-gray-400">
                 <p>Total songs: {playlist.jumlah_lagu}</p>
-                <p>Duration: {formatDuration(playlist.total_durasi)}</p>
+                <p>Duration: {playlist.total_durasi}</p>
               </div>
             </CardContent>
           </Card>
@@ -252,7 +253,7 @@ export default function EditPlaylistPage() {
                       </div>
                       <div className="flex items-center space-x-2">
                         <span className="text-sm text-gray-400">
-                          {formatDuration(song.durasi)}
+                          {song.durasi}
                         </span>
                         <Button
                           variant="outline"
