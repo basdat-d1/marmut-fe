@@ -1,11 +1,11 @@
 "use client"
 
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
+import { flushSync } from 'react-dom'
 import { useAuth, useToast } from '@/contexts/AuthContext'
 import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { songAPI, playlistAPI } from '@/lib/api'
 import { 
@@ -14,12 +14,6 @@ import {
   Plus, 
   ArrowLeft,
   Music,
-  User,
-  Calendar,
-  Clock,
-  Album,
-  Tag,
-  Volume2
 } from 'lucide-react'
 
 interface Song {
@@ -65,6 +59,35 @@ export default function SongDetailPage() {
     loadSongData()
   }, [user, router, songId])
 
+  // Debug effect to monitor song state changes
+  useEffect(() => {
+    if (song) {
+      console.log('Song state updated - total_play:', song.total_play)
+    }
+  }, [song?.total_play])
+
+  const updateSongPlayCount = useCallback((increment: number) => {
+    flushSync(() => {
+      setSong(prev => {
+        if (!prev) return null
+        const newState = { ...prev, total_play: prev.total_play + increment }
+        console.log('Updated song play count from', prev.total_play, 'to', newState.total_play)
+        return newState
+      })
+    })
+  }, [])
+
+  const updateSongDownloadCount = useCallback((increment: number) => {
+    flushSync(() => {
+      setSong(prev => {
+        if (!prev) return null
+        const newState = { ...prev, total_download: prev.total_download + increment }
+        console.log('Updated song download count from', prev.total_download, 'to', newState.total_download)
+        return newState
+      })
+    })
+  }, [])
+
   const loadSongData = async () => {
     try {
       const [songData, playlistsData] = await Promise.all([
@@ -86,10 +109,27 @@ export default function SongDetailPage() {
       return
     }
     try {
-      await songAPI.playSong(songId, playProgress)
-      await loadSongData()
-      showToast('Song played successfully!', 'success')
+      console.log('Current song total_play before API call:', song?.total_play) // Debug log
+      const response = await songAPI.playSong(songId, playProgress)
+      console.log('Play response:', response) // Debug log
+      console.log('Response play_counted:', response?.play_counted) // Debug log
+      console.log('Current song object:', song) // Debug log
+      
+      // Immediately update the total play count if play was counted
+      if (response?.play_counted && song) {
+        console.log('Updating play count from', song.total_play, 'to', song.total_play + 1) // Debug log
+        updateSongPlayCount(1)
+        // Force immediate re-render by updating a separate state
+        console.log('Setting new total play to:', song.total_play + 1)
+      } else {
+        console.log('Not updating play count - conditions not met') // Debug log
+        console.log('Response play_counted:', response?.play_counted) // Debug log
+        console.log('Song exists:', !!song) // Debug log
+      }
+      // Optional: Still reload data to ensure everything is in sync
+      // await loadSongData()
     } catch (error: any) {
+      console.error('Play error:', error) // Debug log
       showToast(error.message || 'Failed to play song', 'error')
     }
   }
@@ -100,16 +140,16 @@ export default function SongDetailPage() {
       return
     }
     try {
-      await playlistAPI.addSongToPlaylist(selectedPlaylist, songId)
+      const res = await playlistAPI.addSongToPlaylist(selectedPlaylist, songId)
       setShowAddToPlaylist(false)
       setSelectedPlaylist('')
-      showToast(`Berhasil menambahkan Lagu dengan judul '${song?.judul}' ke '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`, 'success')
-    } catch (error: any) {
-      if (error.message?.includes('already')) {
+      if (res?.warning) {
         showToast(`Lagu dengan judul '${song?.judul}' sudah ditambahkan di '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`, 'info')
       } else {
-        showToast(error.message || 'Failed to add song to playlist', 'error')
+        showToast(`Berhasil menambahkan Lagu dengan judul '${song?.judul}' ke '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`, 'success')
       }
+    } catch (error: any) {
+      showToast(error.message || 'Failed to add song to playlist', 'error')
     }
   }
 
@@ -124,17 +164,20 @@ export default function SongDetailPage() {
       return
     }
     try {
-      await songAPI.downloadSong(songId)
-      await loadSongData()
-      showToast(`Berhasil mengunduh Lagu dengan judul '${song?.judul}'!`, 'success')
-    } catch (error: any) {
-      if (error.message?.includes('already')) {
+      const res = await songAPI.downloadSong(songId)
+      // Immediately update the total download count if download was successful
+      if (res?.success && song) {
+        updateSongDownloadCount(1)
+      }
+      setShowDownloadConfirm(false)
+      if (res?.warning) {
         showToast(`Lagu dengan judul '${song?.judul}' sudah pernah di unduh!`, 'info')
       } else {
-        showToast(error.message || 'Failed to download song', 'error')
+        showToast(`Berhasil mengunduh Lagu dengan judul '${song?.judul}'!`, 'success')
       }
+    } catch (error: any) {
+      showToast(error.message || 'Failed to download song', 'error')
     }
-    setShowDownloadConfirm(false)
   }
 
   const formatDate = (dateString: string) => {
@@ -175,7 +218,7 @@ export default function SongDetailPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
-      <div className="max-w-4xl mx-auto">
+      <div className="max-w-5xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <Button 
@@ -183,18 +226,24 @@ export default function SongDetailPage() {
             onClick={() => router.back()}
             className="text-white hover:bg-gray-800 mb-4"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Kembali
           </Button>
         </div>
 
         {/* Song Information */}
         <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
-          <CardHeader>
+          <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white text-2xl flex items-center gap-2">
               <Music className="w-6 h-6 text-green-400" />
               {song.judul}
             </CardTitle>
+            <Button 
+              variant="ghost" 
+              onClick={() => router.back()}
+              className="text-white hover:bg-gray-800 ml-auto"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Kembali
+            </Button>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -226,7 +275,7 @@ export default function SongDetailPage() {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-400">Durasi:</label>
-                <p className="text-white">{song.durasi}</p>
+                <p className="text-white">{song.durasi} menit</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-400">Tanggal Rilis:</label>
@@ -250,125 +299,119 @@ export default function SongDetailPage() {
               </div>
             </div>
           </CardContent>
-        </Card>
-
-        {/* Audio Player */}
-        <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
-          <CardHeader>
-            <CardTitle className="text-white flex items-center gap-2">
-              <Volume2 className="w-5 h-5 text-green-400" />
-              Audio Player
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            {/* Progress Bar */}
-            <div className="space-y-2">
-              <label className="text-sm font-medium text-white">Progress: {playProgress}%</label>
-              <div className="relative">
-                <div className="w-full bg-gray-700 rounded-full h-2">
-                  <div 
-                    className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                    style={{ width: `${playProgress}%` }}
-                  ></div>
+          {/* Audio Player - moved inside the card */}
+          <div className="mt-8 pb-8 px-6">
+            <div className="flex flex-col items-center gap-6">
+              {/* Progress Bar */}
+              <div className="w-full max-w-lg space-y-3">
+                <label className="text-sm font-medium text-white mb-3 block">Progress: {playProgress}%</label>
+                <div className="relative">
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div 
+                      className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${playProgress}%` }}
+                    ></div>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={playProgress}
+                    onChange={(e) => setPlayProgress(Number(e.target.value))}
+                    className="absolute inset-0 w-full h-2 opacity-0 cursor-pointer"
+                  />
                 </div>
-                <input
-                  type="range"
-                  min="0"
-                  max="100"
-                  value={playProgress}
-                  onChange={(e) => setPlayProgress(Number(e.target.value))}
-                  className="absolute inset-0 w-full h-2 opacity-0 cursor-pointer"
-                />
               </div>
-            </div>
-
-            {/* Control Buttons */}
-            <div className="flex space-x-4">
-              <Button 
-                onClick={handlePlay}
-                className="btn-spotify"
-                disabled={playProgress < 70}
-              >
-                <Play className="w-4 h-4 mr-2" />
-                Play
-              </Button>
-              <Button 
-                onClick={() => setShowAddToPlaylist(true)}
-                variant="outline"
-                className="border-gray-700 text-white hover:bg-gray-800"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Add to Playlist
-              </Button>
-              {user?.is_premium && (
+              {/* Control Buttons */}
+              <div className="flex flex-row items-center justify-center gap-4 mt-4">
                 <Button 
-                  onClick={() => setShowDownloadConfirm(true)}
+                  onClick={handlePlay}
+                  className="btn-spotify"
+                  disabled={playProgress < 70}
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Play
+                </Button>
+                <Button 
+                  onClick={() => setShowAddToPlaylist(true)}
                   variant="outline"
                   className="border-gray-700 text-white hover:bg-gray-800"
                 >
-                  <Download className="w-4 h-4 mr-2" />
-                  Download
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add to Playlist
                 </Button>
-              )}
+                {user?.is_premium && (
+                  <Button 
+                    onClick={() => setShowDownloadConfirm(true)}
+                    variant="outline"
+                    className="border-gray-700 text-white hover:bg-gray-800"
+                  >
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
+                  </Button>
+                )}
+              </div>
             </div>
-          </CardContent>
+          </div>
         </Card>
 
         {/* Add to Playlist Modal */}
         {showAddToPlaylist && (
-          <Card className="mb-6 bg-gray-900/80 border-0 shadow-md">
-            <CardHeader>
-              <CardTitle className="text-white flex items-center gap-2">
-                <Plus className="w-5 h-5 text-green-400" />
-                Add Song to User Playlist
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div>
-                <label className="text-sm font-medium text-white">Judul: {song.judul}</label>
-              </div>
-              <div>
-                <label className="text-sm font-medium text-white">Artist: {song.artist}</label>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-white mb-2">
-                  Playlist *
-                </label>
-                <select
-                  value={selectedPlaylist}
-                  onChange={(e) => setSelectedPlaylist(e.target.value)}
-                  required
-                  className="w-full p-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-green-500"
-                >
-                  <option value="" className="bg-gray-800">Pilih playlist</option>
-                  {playlists.map((playlist) => (
-                    <option key={playlist.id} value={playlist.id} className="bg-gray-800">
-                      {playlist.judul}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="flex space-x-2">
-                <Button 
-                  onClick={() => setShowAddToPlaylistConfirm(true)}
-                  className="btn-spotify"
-                  disabled={!selectedPlaylist}
-                >
-                  Tambah
-                </Button>
-                <Button 
-                  onClick={() => {
-                    setShowAddToPlaylist(false)
-                    setSelectedPlaylist('')
-                  }}
-                  variant="outline"
-                  className="border-gray-700 text-white hover:bg-gray-800"
-                >
-                  Kembali
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
+            <Card className="w-full max-w-md bg-gray-900/90 border-0 shadow-2xl">
+              <CardHeader>
+                <CardTitle className="text-white flex items-center gap-2">
+                  <Plus className="w-5 h-5 text-green-400" />
+                  Add Song to User Playlist
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                <div>
+                  <label className="text-sm font-medium text-white">Judul: {song.judul}</label>
+                </div>
+                <div>
+                  <label className="text-sm font-medium text-white">Artist: {song.artist}</label>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-white mb-2">
+                    Playlist
+                  </label>
+                  <select
+                    value={selectedPlaylist}
+                    onChange={(e) => setSelectedPlaylist(e.target.value)}
+                    required
+                    className="w-full p-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-green-500"
+                  >
+                    <option value="" className="bg-gray-800">Pilih playlist</option>
+                    {playlists.map((playlist) => (
+                      <option key={playlist.id} value={playlist.id} className="bg-gray-800">
+                        {playlist.judul}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                <div className="flex space-x-2">
+                  <Button 
+                    onClick={() => setShowAddToPlaylistConfirm(true)}
+                    className="btn-spotify"
+                    disabled={!selectedPlaylist}
+                  >
+                    Tambah
+                  </Button>
+                  <Button 
+                    onClick={() => {
+                      setShowAddToPlaylist(false)
+                      setSelectedPlaylist('')
+                    }}
+                    variant="outline"
+                    className="border-gray-700 text-white hover:bg-gray-800"
+                  >
+                    Kembali
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {/* Confirmation Modals */}

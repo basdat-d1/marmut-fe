@@ -397,7 +397,7 @@ export const songAPI = {
   },
 
   async playSong(songId: string, progress: number = 0) {
-    return apiRequest(`/api/play-song/${songId}/`, {
+    return apiRequest(`/api/play-song/${songId}/play/`, {
       method: 'POST',
       body: JSON.stringify({ progress }),
     })

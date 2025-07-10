@@ -85,17 +85,17 @@ export default function AddSongToPlaylistPage() {
   const handleAddSong = async (songId: string, songTitle: string) => {
     try {
       setLoadingSongs(true)
-      await playlistAPI.addSongToPlaylist(playlistId, songId)
-      showToast(`Berhasil menambahkan lagu "${songTitle}" ke playlist!`, 'success')
-      // Remove song from available list
-      setAvailableSongs(prev => prev.filter(song => song.id !== songId))
-      setFilteredSongs(prev => prev.filter(song => song.id !== songId))
-    } catch (error: any) {
-      if (error.message?.includes('already')) {
-        showToast(`Lagu "${songTitle}" sudah ada di playlist ini!`, 'error')
+      const res = await playlistAPI.addSongToPlaylist(playlistId, songId)
+      if (res?.warning) {
+        showToast(`Lagu "${songTitle}" sudah ada di playlist ini!`, 'info')
       } else {
-        showToast(error.message || 'Gagal menambahkan lagu ke playlist', 'error')
+        showToast(`Berhasil menambahkan lagu "${songTitle}" ke playlist!`, 'success')
+        // Remove song from available list
+        setAvailableSongs(prev => prev.filter(song => song.id !== songId))
+        setFilteredSongs(prev => prev.filter(song => song.id !== songId))
       }
+    } catch (error: any) {
+      showToast(error.message || 'Gagal menambahkan lagu ke playlist', 'error')
     } finally {
       setLoadingSongs(false)
     }

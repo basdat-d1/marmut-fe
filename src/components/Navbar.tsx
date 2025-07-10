@@ -203,19 +203,55 @@ export default function Navbar() {
   // Authenticated user navbar
   return (
     <>
-      <nav className="bg-black text-white px-6 py-4 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/dashboard" className="text-2xl font-bold text-green-500">
-            Marmut
-          </Link>
-          
+    <nav className="bg-black text-white px-6 py-4 border-b border-gray-800">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <Link href="/dashboard" className="text-2xl font-bold text-green-500">
+          Marmut
+        </Link>
+        
           <div className="hidden md:flex space-x-3">
             <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
               <Home className="w-4 h-4 mr-1" />
               <span className="text-sm">Dashboard</span>
             </Button>
 
-            {user && !user.is_label && (
+            {user && (
+            <Link href="/playlist">
+                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                  <Library className="w-4 h-4 mr-1" />
+                  <span className="text-sm">Playlist</span>
+              </Button>
+            </Link>
+          )}
+
+          {user && user.is_podcaster && (
+            <Link href="/podcast">
+                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                  <Mic className="w-4 h-4 mr-1" />
+                  <span className="text-sm">Podcast</span>
+              </Button>
+            </Link>
+          )}
+
+          {user && (user.is_artist || user.is_songwriter) && (
+            <Link href="/album">
+                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                  <Music className="w-4 h-4 mr-1" />
+                  <span className="text-sm">Albums</span>
+              </Button>
+            </Link>
+          )}
+
+          {user && user.is_label && (
+            <Link href="/label-album">
+                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                  <Music className="w-4 h-4 mr-1" />
+                  <span className="text-sm">Albums</span>
+                </Button>
+              </Link>
+            )}
+
+            {user && (
               <Link href="/chart">
                 <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
                   <BarChart3 className="w-4 h-4 mr-1" />
@@ -224,25 +260,7 @@ export default function Navbar() {
               </Link>
             )}
 
-            {user && !user.is_label && (
-              <Link href="/search">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
-                  <Search className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Search</span>
-                </Button>
-              </Link>
-            )}
-
-            {user && !user.is_label && (
-              <Link href="/playlist">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
-                  <Library className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Playlist</span>
-                </Button>
-              </Link>
-            )}
-
-            {user && !user.is_label && (
+            {user && (
               <Link href="/subscription">
                 <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
                   <Package className="w-4 h-4 mr-1" />
@@ -251,44 +269,17 @@ export default function Navbar() {
               </Link>
             )}
 
-            {user && user.is_premium && !user.is_label && (
+            {user && user.is_premium && (
               <Link href="/downloaded-songs">
                 <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
                   <Download className="w-4 h-4 mr-1" />
                   <span className="text-sm">Downloads</span>
-                </Button>
-              </Link>
-            )}
+              </Button>
+            </Link>
+          )}
 
-            {user && user.is_podcaster && (
-              <Link href="/podcast">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
-                  <Mic className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Podcast</span>
-                </Button>
-              </Link>
-            )}
-
-            {user && (user.is_artist || user.is_songwriter) && (
-              <Link href="/album">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
-                  <Music className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Albums</span>
-                </Button>
-              </Link>
-            )}
-
-            {user && user.is_label && (
-              <Link href="/label-album">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
-                  <Music className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Albums</span>
-                </Button>
-              </Link>
-            )}
-
-            {user && (user.is_artist || user.is_songwriter || user.is_label) && (
-              <Link href="/royalty">
+          {user && (user.is_artist || user.is_songwriter || user.is_label) && (
+            <Link href="/royalty">
                 <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
                   <DollarSign className="w-4 h-4 mr-1" />
                   <span className="text-sm">Royalty</span>
@@ -296,129 +287,138 @@ export default function Navbar() {
               </Link>
             )}
 
-            <Button 
-              variant="ghost" 
-              onClick={logout}
-              className="text-white hover:bg-gray-800"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
-            </Button>
-          </div>
-
-          {/* Mobile menu button */}
-          <button
-            className="md:hidden"
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
-          >
-            <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-            </svg>
-          </button>
-        </div>
-
-        {/* Mobile menu for authenticated users */}
-        {isMenuOpen && (
-          <div className="md:hidden mt-4 space-y-2">
-            <Link href="/dashboard">
-              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
-                <Home className="w-4 h-4 mr-2" />
-                Dashboard
+            {user && (
+              <Link href="/search">
+                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                  <Search className="w-4 h-4 mr-1" />
+                  <span className="text-sm">Search</span>
               </Button>
             </Link>
+          )}
 
-            {user && !user.is_label && (
-              <Link href="/chart">
-                <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
-                  <BarChart3 className="w-4 h-4 mr-2" />
-                  Chart
-                </Button>
-              </Link>
-            )}
+          <Button 
+            variant="ghost" 
+            onClick={logout}
+            className="text-white hover:bg-gray-800"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        </div>
 
-            {user && !user.is_label && (
-              <Link href="/search">
-                <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
-                  <Search className="w-4 h-4 mr-2" />
-                  Search
-                </Button>
-              </Link>
-            )}
+        {/* Mobile menu button */}
+        <button
+          className="md:hidden"
+          onClick={() => setIsMenuOpen(!isMenuOpen)}
+        >
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          </svg>
+        </button>
+      </div>
 
-            {user && !user.is_label && (
-              <Link href="/playlist">
-                <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
-                  <Library className="w-4 h-4 mr-2" />
-                  Playlist
-                </Button>
-              </Link>
-            )}
-
-            {user && !user.is_label && (
-              <Link href="/subscription">
-                <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
-                  <Package className="w-4 h-4 mr-2" />
-                  Subscription
-                </Button>
-              </Link>
-            )}
-
-            {user && user.is_premium && !user.is_label && (
-              <Link href="/downloaded-songs">
-                <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
-                  <Download className="w-4 h-4 mr-2" />
-                  Downloads
-                </Button>
-              </Link>
-            )}
-
-            {user && user.is_podcaster && (
-              <Link href="/podcast">
-                <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
-                  <Mic className="w-4 h-4 mr-2" />
-                  Podcast
-                </Button>
-              </Link>
-            )}
-
-            {user && (user.is_artist || user.is_songwriter) && (
-              <Link href="/album">
-                <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
-                  <Music className="w-4 h-4 mr-2" />
-                  Albums
-                </Button>
-              </Link>
-            )}
-
-            {user && user.is_label && (
-              <Link href="/label-album">
-                <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
-                  <Music className="w-4 h-4 mr-2" />
-                  Albums
-                </Button>
-              </Link>
-            )}
-
-            {user && (user.is_artist || user.is_songwriter || user.is_label) && (
-              <Link href="/royalty">
-                <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
-                  <DollarSign className="w-4 h-4 mr-2" />
-                  Royalty
-                </Button>
-              </Link>
-            )}
-
-            <Button 
-              variant="ghost" 
-              onClick={logout}
-              className="w-full text-white hover:bg-gray-800 justify-start"
-            >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
+      {/* Mobile menu for authenticated users */}
+      {isMenuOpen && (
+        <div className="md:hidden mt-4 space-y-2">
+          <Link href="/dashboard">
+            <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+              <Home className="w-4 h-4 mr-2" />
+              Dashboard
             </Button>
-          </div>
-        )}
-      </nav>
+          </Link>
+
+          {user && !user.is_label && (
+            <Link href="/chart">
+              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+                <BarChart3 className="w-4 h-4 mr-2" />
+                Chart
+              </Button>
+            </Link>
+          )}
+
+          {user && !user.is_label && (
+            <Link href="/search">
+              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+                <Search className="w-4 h-4 mr-2" />
+                Search
+              </Button>
+            </Link>
+          )}
+
+          {user && !user.is_label && (
+            <Link href="/playlist">
+              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+                <Library className="w-4 h-4 mr-2" />
+                Playlist
+              </Button>
+            </Link>
+          )}
+
+          {user && !user.is_label && (
+            <Link href="/subscription">
+              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+                <Package className="w-4 h-4 mr-2" />
+                Subscription
+              </Button>
+            </Link>
+          )}
+
+          {user && user.is_premium && !user.is_label && (
+            <Link href="/downloaded-songs">
+              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+                <Download className="w-4 h-4 mr-2" />
+                Downloads
+              </Button>
+            </Link>
+          )}
+
+          {user && user.is_podcaster && (
+            <Link href="/podcast">
+              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+                <Mic className="w-4 h-4 mr-2" />
+                Podcast
+              </Button>
+            </Link>
+          )}
+
+          {user && (user.is_artist || user.is_songwriter) && (
+            <Link href="/album">
+              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+                <Music className="w-4 h-4 mr-2" />
+                Albums
+              </Button>
+            </Link>
+          )}
+
+          {user && user.is_label && (
+            <Link href="/label-album">
+              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+                <Music className="w-4 h-4 mr-2" />
+                Albums
+              </Button>
+            </Link>
+          )}
+
+          {user && (user.is_artist || user.is_songwriter || user.is_label) && (
+            <Link href="/royalty">
+              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+                <DollarSign className="w-4 h-4 mr-2" />
+                Royalty
+              </Button>
+            </Link>
+          )}
+
+          <Button 
+            variant="ghost" 
+            onClick={logout}
+            className="w-full text-white hover:bg-gray-800 justify-start"
+          >
+            <LogOut className="w-4 h-4 mr-2" />
+            Logout
+          </Button>
+        </div>
+      )}
+    </nav>
     </>
   )
 } 
