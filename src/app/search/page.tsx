@@ -21,19 +21,21 @@ interface SearchResult {
   judul: string
   oleh: string
   tipe: 'SONG' | 'PODCAST' | 'USER_PLAYLIST'
-  artist_nama?: string
-  podcaster_nama?: string
-  pembuat_nama?: string
   durasi?: number
   jumlah_lagu?: number
-  total_durasi?: string
+  total_durasi?: number
+  total_play?: number
+  jumlah_episode?: number
 }
 
 interface SearchResponse {
-  results?: {
-    songs?: any[]
-    podcasts?: any[]
-    playlists?: any[]
+  message: string
+  query: string
+  results: {
+    songs: SearchResult[]
+    podcasts: SearchResult[]
+    playlists: SearchResult[]
+    total: number
   }
 }
 
@@ -45,6 +47,7 @@ export default function SearchPage() {
   const [results, setResults] = useState<SearchResult[]>([])
   const [loading, setLoading] = useState(false)
   const [searched, setSearched] = useState(false)
+  const [message, setMessage] = useState('')
 
   const handleSearch = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -55,28 +58,20 @@ export default function SearchPage() {
 
     try {
       const data: SearchResponse = await searchAPI.search(query)
+      
       // Combine all results from different categories
       const allResults = [
-        ...(data.results?.songs || []).map((song: any) => ({
-          ...song,
-          tipe: 'SONG' as const,
-          oleh: song.artist_nama || song.oleh
-        })),
-        ...(data.results?.podcasts || []).map((podcast: any) => ({
-          ...podcast,
-          tipe: 'PODCAST' as const,
-          oleh: podcast.podcaster_nama || podcast.oleh
-        })),
-        ...(data.results?.playlists || []).map((playlist: any) => ({
-          ...playlist,
-          tipe: 'USER_PLAYLIST' as const,
-          oleh: playlist.pembuat_nama || playlist.oleh
-        }))
+        ...(data.results.songs || []),
+        ...(data.results.podcasts || []),
+        ...(data.results.playlists || [])
       ]
+      
       setResults(allResults)
-    } catch (error) {
-      showToast('Search failed. Please try again.', 'error')
+      setMessage(data.message)
+    } catch (error: any) {
+      showToast(error.message || 'Search failed. Please try again.', 'error')
       setResults([])
+      setMessage('')
     } finally {
       setLoading(false)
     }
@@ -124,7 +119,9 @@ export default function SearchPage() {
 
   const handlePlayItem = (item: SearchResult) => {
     // Handle play functionality based on item type
-    
+    if (item.tipe === 'SONG') {
+      router.push(`/song/${item.id}`)
+    }
   }
 
   return (
@@ -175,7 +172,7 @@ export default function SearchPage() {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Search className="w-5 h-5 text-green-400" />
-                {loading ? 'Searching...' : `Hasil Pencarian "${query}"`}
+                {loading ? 'Searching...' : message || `Hasil Pencarian "${query}"`}
               </CardTitle>
             </CardHeader>
             <CardContent>
