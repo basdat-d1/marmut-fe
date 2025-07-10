@@ -183,6 +183,12 @@ export const playlistAPI = {
   async getAvailableSongs() {
     return apiRequest('/api/album-song/songs/')
   },
+
+  async playSongFromPlaylist(playlistId: string, songId: string) {
+    return apiRequest(`/api/play-user-playlist/${playlistId}/song/${songId}/`, {
+      method: 'POST',
+    })
+  },
 }
 
 // Album API

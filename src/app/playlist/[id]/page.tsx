@@ -83,7 +83,7 @@ export default function PlaylistDetailPage() {
 
   const handlePlaySong = async (songId: string) => {
     try {
-      // This would typically call a play song API
+      await playlistAPI.playSongFromPlaylist(playlistId, songId)
       showToast('Song played successfully!', 'success')
     } catch (error: any) {
       showToast(error.message || 'Failed to play song', 'error')
@@ -243,14 +243,16 @@ export default function PlaylistDetailPage() {
                 <Music className="w-5 h-5 text-green-400" />
                 Daftar Lagu
               </CardTitle>
-              <Button 
-                onClick={() => router.push(`/playlist/${playlistId}/add-song`)}
-                className="btn-spotify"
+              {playlistDetail.playlist.email_pembuat === user?.email && (
+                <Button 
+                  onClick={() => router.push(`/playlist/${playlistId}/add-song`)}
+                  className="btn-spotify"
                   size="sm"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Tambah Lagu
-              </Button>
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Tambah Lagu
+                </Button>
+              )}
             </div>
           </CardHeader>
           <CardContent>
@@ -261,14 +263,16 @@ export default function PlaylistDetailPage() {
                   </div>
                   <h3 className="text-xl font-semibold text-white mb-3">Belum Ada Lagu</h3>
                   <p className="text-gray-400 mb-6 max-w-md mx-auto">Playlist ini belum memiliki lagu. Mulai menambahkan lagu favorit Anda!</p>
-                <Button 
-                  onClick={() => router.push(`/playlist/${playlistId}/add-song`)}
-                    className="btn-spotify px-8 py-3 text-lg"
-                >
-                    <Plus className="w-5 h-5 mr-2" />
-                    Tambah Lagu Pertama
-                </Button>
-              </div>
+                  {playlistDetail.playlist.email_pembuat === user?.email && (
+                    <Button 
+                      onClick={() => router.push(`/playlist/${playlistId}/add-song`)}
+                      className="btn-spotify px-8 py-3 text-lg"
+                    >
+                      <Plus className="w-5 h-5 mr-2" />
+                      Tambah Lagu Pertama
+                    </Button>
+                  )}
+                </div>
             ) : (
                 <div className="overflow-y-auto max-h-96">
                   <div className="space-y-2">
