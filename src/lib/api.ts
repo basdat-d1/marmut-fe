@@ -283,9 +283,14 @@ export const podcastAPI = {
   async createEpisode(episodeData: { id_konten_podcast: string; judul: string; deskripsi: string; durasi: number }) {
     // Extract podcast ID from episode data
     const podcastId = episodeData.id_konten_podcast
+    // Map frontend fields to backend expected fields
     return apiRequest(`/api/podcast/${podcastId}/episodes/create/`, {
       method: 'POST',
-      body: JSON.stringify(episodeData),
+      body: JSON.stringify({
+        title: episodeData.judul,
+        description: episodeData.deskripsi,
+        duration: episodeData.durasi
+      }),
     })
   },
 
