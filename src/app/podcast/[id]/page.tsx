@@ -10,10 +10,6 @@ import { podcastAPI } from '@/lib/api'
 import { 
   ArrowLeft,
   Mic,
-  User,
-  Calendar,
-  Clock,
-  Tag,
   Play
 } from 'lucide-react'
 

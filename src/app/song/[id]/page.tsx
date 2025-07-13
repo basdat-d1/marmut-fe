@@ -59,19 +59,14 @@ export default function SongDetailPage() {
     loadSongData()
   }, [user, router, songId])
 
-  // Debug effect to monitor song state changes
-  useEffect(() => {
-    if (song) {
-      console.log('Song state updated - total_play:', song.total_play)
-    }
-  }, [song?.total_play])
+
 
   const updateSongPlayCount = useCallback((increment: number) => {
     flushSync(() => {
       setSong(prev => {
         if (!prev) return null
         const newState = { ...prev, total_play: prev.total_play + increment }
-        console.log('Updated song play count from', prev.total_play, 'to', newState.total_play)
+
         return newState
       })
     })
@@ -82,7 +77,7 @@ export default function SongDetailPage() {
       setSong(prev => {
         if (!prev) return null
         const newState = { ...prev, total_download: prev.total_download + increment }
-        console.log('Updated song download count from', prev.total_download, 'to', newState.total_download)
+
         return newState
       })
     })
@@ -109,29 +104,15 @@ export default function SongDetailPage() {
       return
     }
     try {
-      console.log('Current song total_play before API call:', song?.total_play) // Debug log
       const response = await songAPI.playSong(songId, playProgress)
-      console.log('Play response:', response) // Debug log
-      console.log('Response play_counted:', response?.play_counted) // Debug log
-      console.log('Current song object:', song) // Debug log
       
       // Immediately update the total play count if play was counted
       if (response?.play_counted && song) {
-        console.log('Updating play count from', song.total_play, 'to', song.total_play + 1) // Debug log
         updateSongPlayCount(1)
-        // Force immediate re-render by updating a separate state
-        console.log('Setting new total play to:', song.total_play + 1)
-      } else {
-        console.log('Not updating play count - conditions not met') // Debug log
-        console.log('Response play_counted:', response?.play_counted) // Debug log
-        console.log('Song exists:', !!song) // Debug log
       }
-      // Optional: Still reload data to ensure everything is in sync
-      // await loadSongData()
-    } catch (error: any) {
-      console.error('Play error:', error) // Debug log
-      showToast(error.message || 'Failed to play song', 'error')
-    }
+          } catch (error: any) {
+        showToast(error.message || 'Failed to play song', 'error')
+      }
   }
 
   const handleAddToPlaylist = async () => {

@@ -7,7 +7,6 @@ import {
   Download, 
   Plus, 
   Trash2, 
-  Music,
   X
 } from 'lucide-react'
 

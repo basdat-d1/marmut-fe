@@ -8,20 +8,12 @@ import { Button } from '@/components/ui/button'
 import { dashboardAPI, playlistAPI, albumAPI, podcastAPI } from '@/lib/api'
 import { 
   User, 
-  Mic, 
   Crown, 
-  Play,
   Album,
   Library,
-  DollarSign,
   TrendingUp,
   Music,
-  Heart,
-  Star,
   Zap,
-  Calendar,
-  MapPin,
-  Mail,
   Shield
 } from 'lucide-react'
 

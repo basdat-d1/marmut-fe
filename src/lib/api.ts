@@ -32,7 +32,9 @@ async function apiRequest(url: string, options: RequestInit = {}) {
     ...options,
   }
 
-  const response = await fetch(`${BASE_URL}${url}`, config)
+  const fullUrl = `${BASE_URL}${url}`
+
+  const response = await fetch(fullUrl, config)
   
   if (!response.ok) {
     let errorMessage = `HTTP error! status: ${response.status}`
@@ -59,7 +61,8 @@ async function apiRequest(url: string, options: RequestInit = {}) {
 
   const contentType = response.headers.get('content-type')
   if (contentType && contentType.includes('application/json')) {
-    return response.json()
+    const responseData = await response.json()
+    return responseData
   }
   return response.text()
 }
@@ -194,7 +197,7 @@ export const playlistAPI = {
 // Album API
 export const albumAPI = {
   async getUserAlbums() {
-    return apiRequest('/api/album-song/albums/')
+    return apiRequest('/api/album-song/user-albums/')
   },
 
   async getUserSongs() {
@@ -205,8 +208,8 @@ export const albumAPI = {
     return apiRequest(`/api/album-song/albums/${albumId}/`)
   },
 
-  async createAlbum(albumData: { judul: string; label: string }) {
-    return apiRequest('/api/album-song/albums/', {
+  async createAlbum(albumData: { judul_album: string; label_id: string }) {
+    return apiRequest('/api/album-song/create-album/', {
       method: 'POST',
       body: JSON.stringify(albumData),
     })
@@ -229,10 +232,20 @@ export const albumAPI = {
     })
   },
 
-  async addSong(albumId: string, songData: { judul: string; durasi: number }) {
-    return apiRequest(`/api/album-song/albums/${albumId}/songs/`, {
+  async addSong(albumId: string, songData: { judul: string; durasi: number; artist_id: string; songwriter_ids: string[]; genres: string[]; album_id: string }) {
+    // The backend expects judul_lagu, not judul
+    const payload = {
+      album_id: albumId,
+      judul_lagu: songData.judul,
+      durasi: songData.durasi,
+      artist_id: songData.artist_id,
+      songwriter_ids: songData.songwriter_ids,
+      genres: songData.genres,
+    }
+    
+    return apiRequest(`/api/album-song/create-song/`, {
       method: 'POST',
-      body: JSON.stringify(songData),
+      body: JSON.stringify(payload),
     })
   },
 
@@ -260,6 +273,22 @@ export const albumAPI = {
 
   async getLabelAlbums() {
     return apiRequest('/api/album-song/albums/')
+  },
+
+  async getAllLabels() {
+    return apiRequest('/api/album-song/labels/')
+  },
+
+  async getAllArtists() {
+    return apiRequest('/api/album-song/artists/')
+  },
+
+  async getAllSongwriters() {
+    return apiRequest('/api/album-song/songwriters/')
+  },
+
+  async getAllGenres() {
+    return apiRequest('/api/album-song/genres/')
   },
 }
 
@@ -375,6 +404,12 @@ export const royaltyAPI = {
 
   async getLabelRoyalties() {
     return apiRequest('/api/royalty/label/')
+  },
+
+  async updateRoyalties() {
+    return apiRequest('/api/royalty/update/', {
+      method: 'POST',
+    })
   },
 }
 

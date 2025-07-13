@@ -11,9 +11,7 @@ import {
   TrendingUp, 
   Music, 
   Eye,
-  Play,
-  Calendar,
-  Users
+  ArrowLeft,
 } from 'lucide-react'
 
 interface Chart {
@@ -28,6 +26,7 @@ interface ChartSong {
   total_play: number
   total_download?: number
   type?: string
+  tanggal_rilis?: string
 }
 
 export default function ChartPage() {
@@ -79,7 +78,8 @@ export default function ChartPage() {
           album: item.album || item.album_title,
           total_play: item.total_play || item.total_plays || 0,
           total_download: item.total_download,
-          type: item.type
+          type: item.type,
+          tanggal_rilis: item.tanggal_rilis
         }))
       }
       setChartSongs(songs)
@@ -92,19 +92,6 @@ export default function ChartPage() {
 
   const handleViewSong = (songId: string) => {
     router.push(`/song/${songId}`)
-  }
-
-  const handlePlaySong = (songId: string) => {
-    // Handle play functionality
-    
-  }
-
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric'
-    })
   }
 
   const formatNumber = (num: number) => {
@@ -194,117 +181,107 @@ export default function ChartPage() {
 
         {/* Chart Detail */}
         {selectedChart && (
-          <div>
-            {/* Back Button */}
-            <div className="mb-6">
-              <Button 
-                variant="ghost" 
-                onClick={() => {
-                  setSelectedChart(null)
-                  setChartSongs([])
-                }}
-                className="text-white hover:bg-gray-800"
-              >
-                ← Kembali
-              </Button>
-            </div>
-
-            <Card className="bg-gray-900/80 border-0 shadow-md">
-              <CardHeader>
+          <Card className="bg-gray-900/80 border-0 shadow-md">
+            <CardHeader>
+              <div className="flex items-center justify-between">
                 <CardTitle className="text-white flex items-center gap-2">
                   <BarChart3 className="w-5 h-5 text-green-400" />
                   Chart Detail
                 </CardTitle>
-                <p className="text-gray-400">Tipe: {selectedChart.tipe}</p>
-              </CardHeader>
-              <CardContent>
-                {loadingSongs ? (
-                  <div className="text-center py-8">
-                    <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
-                    <p className="mt-4 text-gray-400">Loading chart songs...</p>
-                  </div>
-                ) : chartSongs.length === 0 ? (
-                  <div className="text-center py-8">
-                    <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                    <h3 className="text-lg font-medium text-white mb-2">No Songs in Chart</h3>
-                    <p className="text-gray-400">This chart doesn't have any songs yet.</p>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full">
-                      <thead className="bg-gray-800/50">
-                        <tr>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            #
-                          </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Judul Lagu
-                          </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Oleh
-                          </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Album
-                          </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Total Plays
-                          </th>
-                          <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                            Actions
-                          </th>
+                <Button 
+                  variant="ghost" 
+                  onClick={() => {
+                    setSelectedChart(null)
+                    setChartSongs([])
+                  }}
+                  className="text-white hover:bg-gray-800"
+                >
+                  <ArrowLeft className="w-4 h-4 mr-2" />
+                  Kembali
+                </Button>
+              </div>
+              <p className="text-gray-400">Tipe: {selectedChart.tipe}</p>
+            </CardHeader>
+            <CardContent>
+              {loadingSongs ? (
+                <div className="text-center py-8">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+                  <p className="mt-4 text-gray-400">Loading chart songs...</p>
+                </div>
+              ) : chartSongs.length === 0 ? (
+                <div className="text-center py-8">
+                  <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+                  <h3 className="text-lg font-medium text-white mb-2">No Songs in Chart</h3>
+                  <p className="text-gray-400">This chart doesn't have any songs yet.</p>
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="bg-gray-800/50">
+                      <tr>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          #
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Judul Lagu
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Oleh
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Tanggal Rilis
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Total Plays
+                        </th>
+                        <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-800">
+                      {chartSongs.map((song, index) => (
+                        <tr key={song.id} className="hover:bg-gray-800/30 transition-colors">
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="text-sm font-bold text-white">
+                              {index + 1}
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-center">
+                            <div className="text-sm font-medium text-white">{song.judul}</div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                            {song.artist}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                            {song.tanggal_rilis || '-'}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
+                            <div className="flex items-center justify-center space-x-1">
+                              <TrendingUp className="w-4 h-4 text-green-400" />
+                              <span>{formatNumber(song.total_play)}</span>
+                            </div>
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
+                            <div className="flex justify-center space-x-2">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="border-gray-700 text-white hover:bg-gray-800"
+                                onClick={() => handleViewSong(song.id)}
+                              >
+                                <Eye className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-gray-800">
-                        {chartSongs.map((song, index) => (
-                          <tr key={song.id} className="hover:bg-gray-800/30 transition-colors">
-                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                              <div className="text-sm font-bold text-white">
-                                {index + 1}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-center">
-                              <div className="text-sm font-medium text-white">{song.judul}</div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
-                              {song.artist}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
-                              {song.album || 'N/A'}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
-                              <div className="flex items-center justify-center space-x-1">
-                                <TrendingUp className="w-4 h-4 text-green-400" />
-                                <span>{formatNumber(song.total_play)}</span>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-center">
-                              <div className="flex justify-center space-x-2">
-                                <Button 
-                                  size="sm" 
-                                  variant="outline"
-                                  className="border-gray-700 text-white hover:bg-gray-800"
-                                  onClick={() => handleViewSong(song.id)}
-                                >
-                                  <Eye className="w-4 h-4" />
-                                </Button>
-                                <Button 
-                                  size="sm" 
-                                  className="btn-spotify"
-                                  onClick={() => handlePlaySong(song.id)}
-                                >
-                                  <Play className="w-4 h-4" />
-                                </Button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
         )}
 
         {/* Chart Information */}

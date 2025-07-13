@@ -10,11 +10,9 @@ import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { podcastAPI } from '@/lib/api'
 import { 
   Plus, 
-  Edit, 
   Trash2, 
   Mic, 
   Clock,
-  PlusCircle,
   Eye,
   Library
 } from 'lucide-react'

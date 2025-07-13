@@ -4,7 +4,6 @@ import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { useAuth, useToast } from '@/contexts/AuthContext'
 import { searchAPI } from '@/lib/api'
 import { 
@@ -17,11 +16,7 @@ import {
   BarChart3,
   Download,
   Package,
-  Crown,
   DollarSign,
-  X,
-  Eye,
-  Play
 } from 'lucide-react'
 
 interface SearchResult {

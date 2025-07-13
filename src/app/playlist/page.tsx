@@ -10,7 +10,6 @@ import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { playlistAPI } from '@/lib/api'
 import { 
   Plus, 
-  Play, 
   Edit, 
   Trash2, 
   Music, 

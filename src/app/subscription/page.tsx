@@ -6,17 +6,12 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { Input } from '@/components/ui/input'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { subscriptionAPI } from '@/lib/api'
 import { 
   Package, 
-  CreditCard, 
-  Wallet, 
   History,
   Crown,
-  Check,
-  ArrowLeft
 } from 'lucide-react'
 import PaymentModal from './PaymentModal'
 

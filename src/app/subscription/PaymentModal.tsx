@@ -80,9 +80,9 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
                 className="w-full p-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-green-500"
               >
                 <option value="" className="bg-gray-800">Pilih metode pembayaran</option>
-                <option value="transfer bank" className="bg-gray-800">Transfer Bank</option>
-                <option value="kartu kredit" className="bg-gray-800">Kartu Kredit</option>
-                <option value="e-wallet" className="bg-gray-800">E-Wallet</option>
+                <option value="Transfer Bank" className="bg-gray-800">Transfer Bank</option>
+                <option value="Kartu Kredit" className="bg-gray-800">Kartu Kredit</option>
+                <option value="E-Wallet" className="bg-gray-800">E-Wallet</option>
               </select>
             </div>
             <div className="flex space-x-2">
