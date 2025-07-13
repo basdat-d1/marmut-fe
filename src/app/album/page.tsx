@@ -195,7 +195,7 @@ export default function AlbumPage() {
     const durasiInt = parseInt(durasiStr)
     
     if (!createForm.judul || !createForm.label || !firstSongForm.judul || !durasiInt || !artistField || firstSongForm.songwriters.length === 0 || firstSongForm.genres.length === 0) {
-      showToast('Semua field wajib diisi', 'error')
+      showToast('All fields are required', 'error')
       return
     }
     try {
@@ -224,9 +224,9 @@ export default function AlbumPage() {
       setFirstSongForm({ judul: '', durasi: '', artist: null, songwriters: [], genres: [] })
       setShowCreateAlbumModal(false)
       await loadAlbums()
-      showToast('Album & lagu pertama berhasil dibuat!', 'success')
+      showToast('Album & first song created successfully!', 'success')
     } catch (error: any) {
-      showToast(error.message || 'Gagal membuat album/lagu', 'error')
+      showToast(error.message || 'Failed to create album/song', 'error')
     }
   }
 
@@ -486,7 +486,7 @@ export default function AlbumPage() {
             overlayClassName="fixed inset-0 bg-black bg-opacity-60 z-50 flex items-center justify-center"
             ariaHideApp={false}
           >
-            <h2 className="text-xl font-bold text-white mb-4">Tambah Lagu ke "{selectedAlbum?.judul}"</h2>
+                          <h2 className="text-xl font-bold text-white mb-4">Add Song to "{selectedAlbum?.judul}"</h2>
               <form onSubmit={handleAddSong} className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
@@ -570,7 +570,7 @@ export default function AlbumPage() {
                 </div>
               </div>
               <div className="flex space-x-2 pt-2">
-                <Button type="submit" className="btn-spotify">Tambah Lagu</Button>
+                <Button type="submit" className="btn-spotify">Add Song</Button>
                 <Button type="button" variant="outline" className="border-gray-600 text-white hover:bg-gray-800" onClick={() => {
                   setShowSongForm(false)
                   setSongForm({ judul: '', durasi: 0, artist: null, songwriters: [], genres: [] })
@@ -589,13 +589,13 @@ export default function AlbumPage() {
                 <Music className="w-10 h-10 text-green-400" />
               </div>
               <h3 className="text-xl font-semibold text-white mb-3">Anda Belum Memiliki Album</h3>
-              <p className="text-gray-400 mb-6 max-w-md mx-auto">Mulai membuat album pertama Anda untuk mengorganisir karya musik Anda di Marmut.</p>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">Start creating your first album to organize your music work on Marmut.</p>
               <Button 
                 onClick={() => setShowCreateAlbumModal(true)}
                 className="btn-spotify px-8 py-3 text-lg"
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Buat Album Pertama
+                Create First Album
               </Button>
             </CardContent>
           </Card>
@@ -604,7 +604,7 @@ export default function AlbumPage() {
             <CardHeader>
               <CardTitle className="text-white flex items-center">
                 <Music className="w-5 h-5 mr-2 text-green-400" />
-                List Album
+                Album List
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -612,10 +612,10 @@ export default function AlbumPage() {
                 <table className="w-full">
                   <thead className="bg-gray-800/50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Judul</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Title</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Label</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Jumlah Lagu</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Total Durasi</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Number of Songs</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Total Duration</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Action</th>
                     </tr>
                   </thead>
@@ -631,10 +631,10 @@ export default function AlbumPage() {
                             <Button size="sm" className="w-10 h-10 rounded-full flex items-center justify-center mx-1" title="Lihat Daftar Lagu" onClick={() => handleViewSongs(album)}>
                               <Eye className="w-6 h-6" />
                             </Button>
-                            <Button size="sm" className="w-10 h-10 rounded-full flex items-center justify-center mx-1" title="Tambah Lagu" onClick={() => { setSelectedAlbum(album); setShowSongForm(true); }}>
+                            <Button size="sm" className="w-10 h-10 rounded-full flex items-center justify-center mx-1" title="Add Song" onClick={() => { setSelectedAlbum(album); setShowSongForm(true); }}>
                               <PlusCircle className="w-6 h-6" />
                     </Button>
-                            <Button size="sm" variant="outline" className="w-10 h-10 rounded-full flex items-center justify-center mx-1 border border-red-500 text-red-500 hover:bg-red-500 hover:text-white bg-transparent" title="Hapus" onClick={() => { setAlbumToDelete(album); setShowDeleteConfirm(true); }}>
+                            <Button size="sm" variant="outline" className="w-10 h-10 rounded-full flex items-center justify-center mx-1 border border-red-500 text-red-500 hover:bg-red-500 hover:text-white bg-transparent" title="Delete" onClick={() => { setAlbumToDelete(album); setShowDeleteConfirm(true); }}>
                               <Trash2 className="w-6 h-6" />
                     </Button>
                           </div>

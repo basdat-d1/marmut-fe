@@ -5,12 +5,14 @@ import { useAuth, useToast } from '@/contexts/AuthContext'
 import { useRouter, useParams } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { createPortal } from 'react-dom'
 import { podcastAPI } from '@/lib/api'
 import { 
   ArrowLeft,
   Mic,
-  Play
+  Play,
+  Trash2
 } from 'lucide-react'
 
 interface Episode {
@@ -47,6 +49,8 @@ export default function PodcastDetailPage() {
     durasi: ''
   })
   const [modalContainer, setModalContainer] = useState<Element | null>(null)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [episodeToDelete, setEpisodeToDelete] = useState<Episode | null>(null)
 
   useEffect(() => {
     setModalContainer(document.body)
@@ -62,13 +66,17 @@ export default function PodcastDetailPage() {
 
   const loadPodcastData = async () => {
     try {
-      const data = await podcastAPI.getPodcastDetail(podcastId)
+      const [podcastData, episodesData] = await Promise.all([
+        podcastAPI.getPodcastDetail(podcastId),
+        podcastAPI.getPodcastEpisodes(podcastId)
+      ])
+      
       // Combine podcast and episodes data
-      const podcastData = {
-        ...data.podcast,
-        episodes: data.episodes || []
+      const combinedData = {
+        ...podcastData.podcast,
+        episodes: episodesData.episodes || []
       }
-      setPodcast(podcastData)
+      setPodcast(combinedData)
     } catch (error) {
       showToast('Failed to load podcast data', 'error')
     } finally {
@@ -92,11 +100,11 @@ export default function PodcastDetailPage() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
-      day: 'numeric',
-      month: 'long',
-      year: 'numeric'
-    })
+    const date = new Date(dateString)
+    const day = date.getDate().toString().padStart(2, '0')
+    const month = (date.getMonth() + 1).toString().padStart(2, '0')
+    const year = date.getFullYear()
+    return `${day}/${month}/${year}`
   }
 
   // Remove re-formatting, backend already returns formatted string
@@ -122,6 +130,25 @@ export default function PodcastDetailPage() {
     } catch (error: any) {
       showToast(error.message || 'Failed to add episode', 'error')
     }
+  }
+
+  const handleDeleteEpisode = async (episodeId: string) => {
+    if (!podcast) return;
+    try {
+      await podcastAPI.deleteEpisode(podcast.id, episodeId)
+      await loadPodcastData()
+      showToast('Episode deleted successfully!', 'success')
+    } catch (error: any) {
+      showToast(error.message || 'Failed to delete episode', 'error')
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (episodeToDelete) {
+      await handleDeleteEpisode(episodeToDelete.id)
+      setEpisodeToDelete(null)
+    }
+    setShowDeleteConfirm(false)
   }
 
   if (loading) {
@@ -189,7 +216,7 @@ export default function PodcastDetailPage() {
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-400">Total Durasi:</label>
-                <p className="text-white">{formatDuration(podcast.total_durasi)}</p>
+                <p className="text-white">{podcast.total_durasi}</p>
               </div>
               <div>
                 <label className="text-sm font-medium text-gray-400">Tanggal Rilis:</label>
@@ -220,10 +247,14 @@ export default function PodcastDetailPage() {
             {modalContainer && showAddEpisode && createPortal(
               <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
                 <div className="bg-gray-900 rounded-lg shadow-lg p-8 w-full max-w-md relative">
-                  <h2 className="text-xl font-bold text-white mb-4">Tambah Episode</h2>
+                  <h2 className="text-xl font-bold text-white mb-4">CREATE EPISODE</h2>
                   <form onSubmit={handleAddEpisode} className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-white mb-2">Judul Episode</label>
+                      <label className="block text-sm font-medium text-white mb-2">Podcast:</label>
+                      <p className="text-gray-300 mb-2">{podcast.judul}</p>
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium text-white mb-2">Judul:</label>
                       <input
                         type="text"
                         className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
@@ -233,17 +264,17 @@ export default function PodcastDetailPage() {
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-white mb-2">Deskripsi</label>
-                      <input
-                        type="text"
+                      <label className="block text-sm font-medium text-white mb-2">Deskripsi:</label>
+                      <textarea
                         className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+                        rows={3}
                         value={episodeForm.deskripsi}
                         onChange={e => setEpisodeForm(f => ({ ...f, deskripsi: e.target.value }))}
                         required
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-white mb-2">Durasi (menit)</label>
+                      <label className="block text-sm font-medium text-white mb-2">Durasi:</label>
                       <input
                         type="number"
                         min="1"
@@ -255,7 +286,7 @@ export default function PodcastDetailPage() {
                     </div>
                     <div className="flex space-x-2 justify-end">
                       <Button type="button" variant="outline" className="border-gray-600 text-white hover:bg-gray-800" onClick={() => setShowAddEpisode(false)}>Cancel</Button>
-                      <Button type="submit" className="btn-spotify">Tambah Episode</Button>
+                      <Button type="submit" className="btn-spotify">SUBMIT</Button>
                     </div>
                   </form>
                   <button
@@ -278,25 +309,25 @@ export default function PodcastDetailPage() {
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
-                  <thead className="bg-gray-800/50">
-                    <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Judul Episode
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Deskripsi
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Durasi
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Tanggal
-                      </th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                        Actions
-                      </th>
-                    </tr>
-                  </thead>
+                                  <thead className="bg-gray-800/50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Judul Episode
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Deskripsi
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Durasi
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Tanggal
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                      Action
+                    </th>
+                  </tr>
+                </thead>
                   <tbody className="divide-y divide-gray-800">
                     {podcast.episodes.map((episode) => (
                       <tr key={episode.id} className="hover:bg-gray-800/30 transition-colors">
@@ -315,13 +346,28 @@ export default function PodcastDetailPage() {
                           {formatDate(episode.tanggal_rilis)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                          <Button 
-                            size="sm" 
-                            className="btn-spotify"
-                            onClick={() => handlePlayEpisode(episode.id)}
-                          >
-                            <Play className="w-4 h-4" />
-                          </Button>
+                          <div className="flex space-x-2">
+                            <Button 
+                              size="sm" 
+                              className="btn-spotify"
+                              onClick={() => handlePlayEpisode(episode.id)}
+                            >
+                              <Play className="w-4 h-4" />
+                            </Button>
+                            {isPodcaster && (
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                className="border-red-500 text-red-400 hover:bg-red-500 hover:text-white"
+                                onClick={() => {
+                                  setEpisodeToDelete(episode)
+                                  setShowDeleteConfirm(true)
+                                }}
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            )}
+                          </div>
                         </td>
                       </tr>
                     ))}
@@ -331,6 +377,20 @@ export default function PodcastDetailPage() {
             )}
           </CardContent>
         </Card>
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={() => {
+            setShowDeleteConfirm(false)
+            setEpisodeToDelete(null)
+          }}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Episode"
+          message={`Are you sure you want to delete "${episodeToDelete?.judul}"? This action cannot be undone.`}
+          type="delete"
+          confirmText="Delete Episode"
+        />
       </div>
     </div>
   )

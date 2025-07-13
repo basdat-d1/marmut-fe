@@ -17,23 +17,23 @@ interface Album {
 }
 
 export default function LabelAlbumPage() {
-  const { user } = useAuth()
+  const { user, label } = useAuth()
   const { showToast } = useToast()
   const [albums, setAlbums] = useState<Album[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    if (!user) {
+    if (!user && !label) {
       return
     }
     
-    if (!user.is_label) {
+    if (!label) {
       return
     }
     
     loadAlbums()
-  }, [user])
+  }, [user, label])
 
   const loadAlbums = async () => {
     try {
@@ -64,7 +64,7 @@ export default function LabelAlbumPage() {
     })
   }
 
-  if (!user?.is_label) {
+  if (!label) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
         <div className="text-center">

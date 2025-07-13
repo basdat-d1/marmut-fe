@@ -144,7 +144,7 @@ export default function ChartPage() {
                     <thead className="bg-gray-800/50">
                       <tr>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Tipe
+                          Type
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
                           Actions
@@ -166,7 +166,7 @@ export default function ChartPage() {
                               className="btn-spotify"
                             >
                               <Eye className="w-4 h-4 mr-2" />
-                              Lihat Daftar Lagu
+                              View Song List
                             </Button>
                           </td>
                         </tr>
@@ -197,10 +197,10 @@ export default function ChartPage() {
                   className="text-white hover:bg-gray-800"
                 >
                   <ArrowLeft className="w-4 h-4 mr-2" />
-                  Kembali
+                  Back
                 </Button>
               </div>
-              <p className="text-gray-400">Tipe: {selectedChart.tipe}</p>
+              <p className="text-gray-400">Type: {selectedChart.tipe}</p>
             </CardHeader>
             <CardContent>
               {loadingSongs ? (
@@ -223,13 +223,13 @@ export default function ChartPage() {
                           #
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Judul Lagu
+                          Song Title
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Oleh
+                          By
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Tanggal Rilis
+                          Release Date
                         </th>
                         <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">
                           Total Plays

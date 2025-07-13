@@ -54,7 +54,7 @@ export default function CreateSongPage() {
       setSongwriterOptions((songwriters.songwriters || []).map((s: any) => ({ value: s.id, label: s.nama })))
       setGenreOptions((genres.genres || []).map((g: string) => ({ value: g, label: g })))
     } catch {
-      showToast('Gagal memuat data form', 'error')
+      showToast('Failed to load form data', 'error')
     } finally {
       setLoading(false)
     }
@@ -63,7 +63,7 @@ export default function CreateSongPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     if (!form.judul || !form.durasi || !form.album || !form.artist || form.songwriters.length === 0 || form.genres.length === 0) {
-      showToast('Semua field wajib diisi', 'error')
+      showToast('All fields are required', 'error')
       return
     }
     setSubmitting(true)
@@ -76,10 +76,10 @@ export default function CreateSongPage() {
         genres: form.genres.map(g => g.value),
         album_id: form.album.value,
       })
-      showToast('Lagu berhasil dibuat!', 'success')
+      showToast('Song created successfully!', 'success')
       router.push('/album')
     } catch (error: any) {
-      showToast(error.message || 'Gagal membuat lagu', 'error')
+      showToast(error.message || 'Failed to create song', 'error')
     } finally {
       setSubmitting(false)
     }
@@ -176,7 +176,7 @@ export default function CreateSongPage() {
             </div>
             <Button type="submit" className="btn-spotify w-full py-3 text-lg font-bold flex items-center justify-center gap-2" disabled={submitting || loading}>
               <Plus className="w-5 h-5 mr-2" />
-              {submitting ? 'Membuat Lagu...' : 'Buat Lagu'}
+                              {submitting ? 'Creating Song...' : 'Create Song'}
             </Button>
           </form>
         </CardContent>

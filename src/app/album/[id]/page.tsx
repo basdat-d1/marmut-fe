@@ -219,9 +219,9 @@ export default function AlbumDetailPage() {
                 <table className="w-full">
                   <thead className="bg-gray-800/50">
                     <tr>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Judul</th>
+                                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Title</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Artist</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Durasi</th>
+                                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Duration</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Total Play</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Total Download</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Action</th>
@@ -232,7 +232,7 @@ export default function AlbumDetailPage() {
                       <tr key={song.id} className="hover:bg-gray-800/30 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap text-white font-medium">{song.judul}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-300">{song.artist}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-300">{song.durasi} menit</td>
+                                                  <td className="px-6 py-4 whitespace-nowrap text-gray-300">{song.durasi} minutes</td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-300">{song.total_play}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-300">{song.total_download}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
@@ -253,7 +253,7 @@ export default function AlbumDetailPage() {
                               onClick={() => handleDeleteSong(song.id, song.judul)}
                             >
                               <Trash2 className="w-4 h-4 mr-1" />
-                              Hapus
+                              Delete
                             </Button>
                           </div>
                         </td>

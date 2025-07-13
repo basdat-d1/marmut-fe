@@ -5,7 +5,8 @@ import { useAuth } from '@/contexts/AuthContext'
 import { useRouter } from 'next/navigation'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import { dashboardAPI, playlistAPI, albumAPI, podcastAPI } from '@/lib/api'
+import { dashboardAPI } from '@/lib/api'
+import { royaltyAPI } from '@/lib/api'
 import { 
   User, 
   Crown, 
@@ -14,7 +15,8 @@ import {
   TrendingUp,
   Music,
   Zap,
-  Shield
+  Shield,
+  DollarSign
 } from 'lucide-react'
 
 interface UserProfile {
@@ -29,7 +31,6 @@ interface UserProfile {
   is_songwriter: boolean
   is_podcaster: boolean
   is_premium: boolean
-  is_label: boolean
   kontak?: string
   playlists?: any[]
   songs?: any[]
@@ -38,43 +39,58 @@ interface UserProfile {
 }
 
 export default function DashboardPage() {
-  const { user, loading } = useAuth()
+  const { user, label, loading } = useAuth()
   const router = useRouter()
   const [profile, setProfile] = useState<UserProfile | null>(null)
   const [loadingProfile, setLoadingProfile] = useState(true)
   const [error, setError] = useState('')
+  const [labelRoyalty, setLabelRoyalty] = useState<number | null>(null)
+  const [loadingRoyalty, setLoadingRoyalty] = useState(false)
 
   useEffect(() => {
-    if (!loading && !user) {
+    if (!loading && !user && !label) {
       router.push('/')
     }
-  }, [user, loading, router])
+  }, [user, label, loading, router])
 
   useEffect(() => {
-    if (user) {
+    if (user || label) {
       loadUserProfile()
+      if (label) {
+        loadLabelRoyalty()
+      }
     }
-  }, [user])
+  }, [user, label])
 
   const loadUserProfile = async () => {
-    if (!user) return
+    if (!user && !label) return
     
     try {
       let profileData: any = {}
       
-      if (user.is_label) {
+      if (label) {
         profileData = await dashboardAPI.getLabelProfile()
       } else {
         profileData = await dashboardAPI.getUserProfile()
       }
 
-      // The backend dashboard API already provides all the necessary data
-      // including playlists, songs, podcasts, and albums based on user roles
       setProfile(profileData)
     } catch (error) {
       setError('Failed to load profile data')
     } finally {
       setLoadingProfile(false)
+    }
+  }
+
+  const loadLabelRoyalty = async () => {
+    setLoadingRoyalty(true)
+    try {
+      const data = await royaltyAPI.getLabelRoyalties()
+      setLabelRoyalty(data?.total_royalty || 0)
+    } catch (e) {
+      setLabelRoyalty(0)
+    } finally {
+      setLoadingRoyalty(false)
     }
   }
 
@@ -89,7 +105,7 @@ export default function DashboardPage() {
     )
   }
 
-  if (!user || !profile) {
+  if ((!user && !label) || !profile) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
         <div className="text-center">
@@ -109,6 +125,79 @@ export default function DashboardPage() {
     )
   }
 
+  if (label) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-0 md:p-6">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="rounded-2xl bg-gradient-to-r from-green-700/80 to-blue-800/80 px-8 py-10 mb-8 shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <div>
+              <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
+                Welcome back, <span className="bg-gradient-to-r from-green-400 to-blue-400 bg-clip-text text-transparent">{profile.nama}</span>! <span className="inline-block">👋</span>
+              </h1>
+              <p className="text-gray-200 text-lg">Here's what's happening with your music world</p>
+            </div>
+          </div>
+          {/* Summary Cards */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <Card className="bg-gray-900/80 border-0 shadow-md">
+              <CardContent className="flex flex-col items-center justify-center py-6">
+                <span className="text-gray-400 mb-1">Total Albums</span>
+                <span className="text-4xl font-bold text-blue-400">{profile.albums?.length || 0}</span>
+                <Album className="w-8 h-8 text-blue-400 mt-2" />
+              </CardContent>
+            </Card>
+            <Card className="bg-gray-900/80 border-0 shadow-md">
+              <CardContent className="flex flex-col items-center justify-center py-6">
+                <span className="text-gray-400 mb-1">Total Royalty</span>
+                <span className="text-3xl font-bold text-green-400">
+                  {loadingRoyalty ? '...' : new Intl.NumberFormat('en-US', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(labelRoyalty || 0)}
+                </span>
+                <DollarSign className="w-8 h-8 text-green-400 mt-2" />
+              </CardContent>
+            </Card>
+          </div>
+          <div className="bg-gray-900/80 border-0 shadow-md rounded-2xl p-8 mb-8">
+            <h2 className="text-white text-xl font-semibold mb-6 flex items-center gap-2">Label Information</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                                  <label className="text-xs text-gray-400">Label Name</label>
+                <div className="text-white font-medium">{profile.nama}</div>
+              </div>
+              <div>
+                <label className="text-xs text-gray-400">Email</label>
+                <div className="text-white font-medium">{profile.email}</div>
+              </div>
+              {profile.kontak && (
+                <div>
+                  <label className="text-xs text-gray-400">Contact</label>
+                  <div className="text-white font-medium">{profile.kontak}</div>
+                </div>
+              )}
+              <div>
+                <label className="text-xs text-gray-400">Role</label>
+                <div className="text-white font-medium">Label</div>
+              </div>
+            </div>
+          </div>
+          <div className="bg-gray-900/80 border-0 shadow-md rounded-2xl p-8">
+            <h2 className="text-white text-xl font-semibold mb-6 flex items-center gap-2">Album List</h2>
+            {profile.albums && profile.albums.length > 0 ? (
+              <ul className="space-y-2">
+                {profile.albums.map((album: any) => (
+                  <li key={album.id} className="text-white bg-gray-800/60 rounded-lg px-4 py-2">{album.judul}</li>
+                ))}
+              </ul>
+            ) : (
+              <div className="text-gray-400">No Albums Produced Yet</div>
+            )}
+          </div>
+        </div>
+      </div>
+    )
+  }
+
+  if (user) {
   const getGenderText = (gender: number) => gender === 1 ? 'Male' : 'Female'
   
   const getRoles = () => {
@@ -116,7 +205,6 @@ export default function DashboardPage() {
     if (profile.is_artist) roles.push('Artist')
     if (profile.is_songwriter) roles.push('Songwriter')
     if (profile.is_podcaster) roles.push('Podcaster')
-    if (profile.is_label) roles.push('Label')
     
     // If no specific roles, show as Regular User
     if (roles.length === 0) {
@@ -126,9 +214,8 @@ export default function DashboardPage() {
     return roles.join(', ')
   }
 
-  // Check if user should see album stats
   const shouldShowAlbums = () => {
-    return profile.is_artist || profile.is_songwriter || profile.is_label
+      return profile.is_artist || profile.is_songwriter
   }
 
   const formatDate = (dateString: string) => {
@@ -142,7 +229,6 @@ export default function DashboardPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-0 md:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="rounded-2xl bg-gradient-to-r from-green-700/80 to-blue-800/80 px-8 py-10 mb-8 shadow-lg flex flex-col md:flex-row md:items-center md:justify-between gap-4">
           <div>
             <h1 className="text-4xl md:text-5xl font-bold text-white mb-2">
@@ -152,7 +238,6 @@ export default function DashboardPage() {
           </div>
         </div>
 
-        {/* Stats */}
         <div className={`grid grid-cols-1 ${shouldShowAlbums() ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 mb-8`}>
           <Card className="bg-gray-900/80 border-0 shadow-md">
             <CardContent className="flex flex-col items-center justify-center py-6">
@@ -180,7 +265,6 @@ export default function DashboardPage() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {/* Profile Info */}
           <Card className="bg-gray-900/80 border-0 shadow-md">
             <CardHeader className="pb-2">
               <CardTitle className="text-white flex items-center gap-2"><User className="w-5 h-5" /> Profile Information</CardTitle>
@@ -188,52 +272,41 @@ export default function DashboardPage() {
             <CardContent className="space-y-4 pt-2">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
-                  <label className="text-xs text-gray-400">EMAIL</label>
+                  <label className="text-xs text-gray-400">Email</label>
                   <div className="text-white font-medium">{profile.email}</div>
                 </div>
                 <div>
-                  <label className="text-xs text-gray-400">NAME</label>
+                  <label className="text-xs text-gray-400">Name</label>
                   <div className="text-white font-medium">{profile.nama}</div>
                 </div>
-                {/* Only for Pengguna (not label) */}
-                {!profile.is_label && <>
                   <div>
-                    <label className="text-xs text-gray-400">SUBSCRIPTION STATUS</label>
+                    <label className="text-xs text-gray-400">Subscription Status</label>
                     <div className="text-white font-medium">{profile.is_premium ? 'Premium' : 'Basic'}</div>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400">GENDER</label>
+                    <label className="text-xs text-gray-400">Gender</label>
                     <div className="text-white font-medium">{getGenderText(profile.gender)}</div>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400">BIRTH PLACE</label>
+                    <label className="text-xs text-gray-400">Birth Place</label>
                     <div className="text-white font-medium">{profile.tempat_lahir}</div>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400">BIRTH DATE</label>
+                    <label className="text-xs text-gray-400">Birth Date</label>
                     <div className="text-white font-medium">{formatDate(profile.tanggal_lahir)}</div>
                   </div>
                   <div>
-                    <label className="text-xs text-gray-400">CITY</label>
+                    <label className="text-xs text-gray-400">Current City</label>
                     <div className="text-white font-medium">{profile.kota_asal}</div>
                   </div>
                   <div className="md:col-span-2">
-                    <label className="text-xs text-gray-400">ROLE</label>
+                    <label className="text-xs text-gray-400">Role</label>
                     <div className="text-white font-medium">{getRoles()}</div>
                   </div>
-                </>}
-                {/* Only for Label */}
-                {profile.is_label && profile.kontak && (
-                  <div className="md:col-span-2">
-                    <label className="text-xs text-gray-400">CONTACT</label>
-                    <div className="text-white font-medium">{profile.kontak}</div>
-                  </div>
-                )}
               </div>
             </CardContent>
           </Card>
 
-          {/* Quick Actions */}
           <Card className="bg-gray-900/80 border-0 shadow-md">
             <CardHeader className="pb-2">
               <CardTitle className="text-white flex items-center gap-2"><Zap className="w-5 h-5" /> Quick Actions</CardTitle>
@@ -256,10 +329,7 @@ export default function DashboardPage() {
           </Card>
         </div>
 
-        {/* Daftar sesuai role */}
         <div className="mt-10 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {/* Playlist untuk semua user (kecuali label) */}
-          {!profile.is_label && (
             <Card className="bg-gray-900/80 border-0 shadow-md">
               <CardHeader>
                 <CardTitle className="text-white">My Playlists</CardTitle>
@@ -272,13 +342,11 @@ export default function DashboardPage() {
                     ))}
                   </ul>
                 ) : (
-                  <div className="text-gray-400">Belum Memiliki Playlist</div>
+                  <div className="text-gray-400">No Playlists Yet</div>
                 )}
               </CardContent>
             </Card>
-          )}
 
-          {/* Lagu untuk Artist/Songwriter */}
           {(profile.is_artist || profile.is_songwriter) && (
             <Card className="bg-gray-900/80 border-0 shadow-md">
               <CardHeader>
@@ -292,13 +360,12 @@ export default function DashboardPage() {
                     ))}
                   </ul>
                 ) : (
-                  <div className="text-gray-400">Belum Memiliki Lagu</div>
+                  <div className="text-gray-400">No Songs Yet</div>
                 )}
               </CardContent>
             </Card>
           )}
 
-          {/* Podcast untuk Podcaster */}
           {profile.is_podcaster && (
             <Card className="bg-gray-900/80 border-0 shadow-md">
               <CardHeader>
@@ -312,33 +379,16 @@ export default function DashboardPage() {
                     ))}
                   </ul>
                 ) : (
-                  <div className="text-gray-400">Belum Memiliki Podcast</div>
+                  <div className="text-gray-400">No Podcasts Yet</div>
                 )}
               </CardContent>
             </Card>
           )}
-
-          {/* Album untuk Label */}
-          {profile.is_label && (
-            <Card className="bg-gray-900/80 border-0 shadow-md">
-              <CardHeader>
-                <CardTitle className="text-white">My Albums</CardTitle>
-              </CardHeader>
-              <CardContent>
-                {profile.albums && profile.albums.length > 0 ? (
-                  <ul className="space-y-2">
-                    {profile.albums.map((album: any) => (
-                      <li key={album.id} className="text-white bg-gray-800/60 rounded-lg px-4 py-2">{album.judul}</li>
-                    ))}
-                  </ul>
-                ) : (
-                  <div className="text-gray-400">Belum Memproduksi Album</div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-        </div>
+          </div>
       </div>
     </div>
   )
+  }
+
+  return null
 } 

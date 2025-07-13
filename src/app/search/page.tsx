@@ -128,7 +128,7 @@ export default function SearchPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Search Bar</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Search</h1>
           <p className="text-gray-400">Discover music, podcasts, and playlists</p>
         </div>
 
@@ -158,7 +158,7 @@ export default function SearchPage() {
                 ) : (
                   <>
                     <Search className="w-4 h-4 mr-2" />
-                    CARI
+                    Search
                   </>
                 )}
               </Button>
@@ -172,7 +172,7 @@ export default function SearchPage() {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Search className="w-5 h-5 text-green-400" />
-                {loading ? 'Searching...' : message || `Hasil Pencarian "${query}"`}
+                {loading ? 'Searching...' : message || `Search Results for "${query}"`}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -186,7 +186,7 @@ export default function SearchPage() {
                   <Search className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-white mb-2">No Results Found</h3>
                   <p className="text-gray-400">
-                    Maaf, pencarian untuk "{query}" tidak ditemukan
+                    Sorry, no results found for "{query}"
                   </p>
                 </div>
               ) : (
@@ -195,13 +195,13 @@ export default function SearchPage() {
                     <thead className="bg-gray-800/50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Tipe
+                          Type
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Judul
+                          Title
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                          Oleh
+                          By
                         </th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
                           Actions
@@ -234,7 +234,7 @@ export default function SearchPage() {
                                 onClick={() => handleViewItem(item)}
                               >
                                 <Eye className="w-4 h-4 mr-1" />
-                                Lihat
+                                View
                               </Button>
                               {item.tipe === 'SONG' && (
                                 <Button 

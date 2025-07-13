@@ -109,7 +109,7 @@ export default function PlaylistDetailPage() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
@@ -155,7 +155,7 @@ export default function PlaylistDetailPage() {
             className="text-white hover:bg-gray-800 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Kembali
+            Back
           </Button>
         </div>
 
@@ -191,23 +191,23 @@ export default function PlaylistDetailPage() {
                 <div className="flex items-center space-x-3">
                   <User className="w-5 h-5 text-gray-400 flex-shrink-0" />
                   <div>
-                    <span className="text-gray-400 text-sm">Pembuat</span>
+                    <span className="text-gray-400 text-sm">Creator</span>
                     <p className="text-white font-medium">{playlistDetail.playlist.email_pembuat}</p>
                   </div>
                 </div>
                 
                 <div className="flex items-center space-x-3">
                   <Music className="w-5 h-5 text-gray-400 flex-shrink-0" />
-                  <div>
-                    <span className="text-gray-400 text-sm">Jumlah Lagu</span>
-                    <p className="text-white font-medium">{playlistDetail.playlist.jumlah_lagu} lagu</p>
-                  </div>
+                                <div>
+                <span className="text-gray-400 text-sm">Number of Songs</span>
+                <p className="text-white font-medium">{playlistDetail.playlist.jumlah_lagu} songs</p>
+              </div>
                 </div>
                 
                 <div className="flex items-center space-x-3">
                   <Clock className="w-5 h-5 text-gray-400 flex-shrink-0" />
                   <div>
-                    <span className="text-gray-400 text-sm">Total Durasi</span>
+                    <span className="text-gray-400 text-sm">Total Duration</span>
                     <p className="text-white font-medium">{playlistDetail.playlist.total_durasi}</p>
                   </div>
                 </div>
@@ -215,7 +215,7 @@ export default function PlaylistDetailPage() {
                 <div className="flex items-center space-x-3">
                   <Calendar className="w-5 h-5 text-gray-400 flex-shrink-0" />
                   <div>
-                    <span className="text-gray-400 text-sm">Tanggal Dibuat</span>
+                    <span className="text-gray-400 text-sm">Created Date</span>
                     <p className="text-white font-medium">{formatDate(playlistDetail.playlist.tanggal_dibuat)}</p>
                   </div>
                 </div>
@@ -241,7 +241,7 @@ export default function PlaylistDetailPage() {
             <div className="flex items-center justify-between">
               <CardTitle className="text-white flex items-center gap-2">
                 <Music className="w-5 h-5 text-green-400" />
-                Daftar Lagu
+                Song List
               </CardTitle>
               {playlistDetail.playlist.email_pembuat === user?.email && (
                 <Button 
@@ -250,7 +250,7 @@ export default function PlaylistDetailPage() {
                   size="sm"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Tambah Lagu
+                  Add Song
                 </Button>
               )}
             </div>
@@ -261,15 +261,15 @@ export default function PlaylistDetailPage() {
                   <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
                     <Music className="w-10 h-10 text-green-400" />
                   </div>
-                  <h3 className="text-xl font-semibold text-white mb-3">Belum Ada Lagu</h3>
-                  <p className="text-gray-400 mb-6 max-w-md mx-auto">Playlist ini belum memiliki lagu. Mulai menambahkan lagu favorit Anda!</p>
+                  <h3 className="text-xl font-semibold text-white mb-3">No Songs Yet</h3>
+                  <p className="text-gray-400 mb-6 max-w-md mx-auto">This playlist doesn't have any songs yet. Start adding your favorite songs!</p>
                   {playlistDetail.playlist.email_pembuat === user?.email && (
                     <Button 
                       onClick={() => router.push(`/playlist/${playlistId}/add-song`)}
                       className="btn-spotify px-8 py-3 text-lg"
                     >
                       <Plus className="w-5 h-5 mr-2" />
-                      Tambah Lagu Pertama
+                      Add First Song
                     </Button>
                   )}
                 </div>
@@ -302,7 +302,7 @@ export default function PlaylistDetailPage() {
                               className="border-gray-700 text-white hover:bg-gray-800"
                               onClick={() => router.push(`/song/${song.id}`)}
                             >
-                              Lihat
+                              View
                             </Button>
                             {playlistDetail.playlist.email_pembuat === user?.email && (
                               <Button 

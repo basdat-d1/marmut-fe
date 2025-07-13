@@ -9,12 +9,13 @@ import { Input } from '@/components/ui/input'
 import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { podcastAPI } from '@/lib/api'
 import { 
-  Plus, 
+  Plus,
   Trash2, 
   Mic, 
   Clock,
   Eye,
-  Library
+  Library,
+  Edit
 } from 'lucide-react'
 
 interface Podcast {
@@ -155,7 +156,7 @@ export default function PodcastPage() {
               className="btn-spotify"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Tambah Podcast
+              Add Podcast
             </Button>
           </div>
         </div>
@@ -166,14 +167,14 @@ export default function PodcastPage() {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Plus className="w-5 h-5 text-green-400" />
-                Create New Podcast
+                CREATE PODCAST
               </CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreatePodcast} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Podcast Title
+                    Judul: [isian]
                   </label>
                   <Input
                     type="text"
@@ -186,7 +187,7 @@ export default function PodcastPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Genres
+                    Genre: [Multiselect daftar genre pada marmut]
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {availableGenres.map((genre) => (
@@ -204,7 +205,7 @@ export default function PodcastPage() {
                 </div>
                 <div className="flex space-x-2">
                   <Button type="submit" className="btn-spotify">
-                    Create Podcast
+                    [SUBMIT]
                   </Button>
                   <Button 
                     type="button" 
@@ -279,7 +280,7 @@ export default function PodcastPage() {
           <CardHeader>
             <CardTitle className="text-white flex items-center">
               <Mic className="w-5 h-5 mr-2 text-blue-400" />
-              Your Podcasts
+              LIST PODCAST
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -288,16 +289,16 @@ export default function PodcastPage() {
                 <thead className="bg-gray-800/50">
                   <tr>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Podcast
+                      Judul
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Episodes
+                      Jumlah Episode
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Duration
+                      Total Durasi
                     </th>
                     <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
-                      Actions
+                      Action
                     </th>
                   </tr>
                 </thead>
@@ -321,7 +322,7 @@ export default function PodcastPage() {
                       <td className="px-6 py-4 whitespace-nowrap">
                         <div className="flex items-center">
                           <Mic className="w-4 h-4 text-gray-400 mr-2" />
-                          <span className="text-sm text-gray-300">{podcast.episode_count} episodes</span>
+                          <span className="text-sm text-gray-300">{podcast.episode_count}</span>
                         </div>
                       </td>
                       <td className="px-6 py-4 whitespace-nowrap">
@@ -338,16 +339,17 @@ export default function PodcastPage() {
                             onClick={() => router.push(`/podcast/${podcast.id}`)}
                           >
                             <Eye className="w-4 h-4 mr-1" />
-                            Detail
+                            Lihat Daftar Episode
                           </Button>
-                          {/* <Button 
+                          <Button 
                             size="sm" 
                             variant="outline"
                             className="border-gray-700 text-white hover:bg-gray-800"
                             onClick={() => router.push(`/podcast/${podcast.id}/edit`)}
                           >
-                            <Edit className="w-4 h-4" />
-                          </Button> */}
+                            <Edit className="w-4 h-4 mr-1" />
+                            Edit
+                          </Button>
                           <Button 
                             size="sm" 
                             variant="outline"
@@ -358,6 +360,7 @@ export default function PodcastPage() {
                             }}
                           >
                             <Trash2 className="w-4 h-4" />
+                                                          Delete
                           </Button>
                         </div>
                       </td>

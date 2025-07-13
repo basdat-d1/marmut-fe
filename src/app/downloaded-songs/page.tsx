@@ -97,7 +97,7 @@ export default function DownloadedSongsPage() {
             className="text-white hover:bg-gray-800 mb-4"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
-            Kembali
+            Back
           </Button>
         </div>
 
@@ -114,16 +114,16 @@ export default function DownloadedSongsPage() {
                 <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
                   <Download className="w-10 h-10 text-green-400" />
                 </div>
-                <h3 className="text-xl font-semibold text-white mb-3">Belum Ada Lagu Diunduh</h3>
-                <p className="text-gray-400 mb-6 max-w-md mx-auto">Anda belum mengunduh lagu apapun. Mulai unduh lagu favorit Anda!</p>
+                <h3 className="text-xl font-semibold text-white mb-3">No Downloaded Songs Yet</h3>
+                <p className="text-gray-400 mb-6 max-w-md mx-auto">You have not downloaded any songs yet. Start downloading your favorite songs!</p>
               </div>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full">
                   <thead>
                     <tr className="border-b border-gray-800">
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Judul Lagu</th>
-                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Oleh</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Song Title</th>
+                      <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">By</th>
                       <th className="text-left py-3 px-4 text-sm font-medium text-gray-400">Actions</th>
                     </tr>
                   </thead>
@@ -150,7 +150,7 @@ export default function DownloadedSongsPage() {
                               onClick={() => router.push(`/song/${song.id}`)}
                             >
                               <Eye className="w-4 h-4 mr-1" />
-                              Lihat
+                              View
                             </Button>
                             <Button 
                               size="sm" 
@@ -162,7 +162,7 @@ export default function DownloadedSongsPage() {
                               }}
                             >
                               <Trash2 className="w-4 h-4 mr-1" />
-                              Hapus
+                              Delete
                             </Button>
                           </div>
                         </td>
@@ -183,10 +183,10 @@ export default function DownloadedSongsPage() {
             setSongToDelete(null)
           }}
           onConfirm={handleDeleteConfirm}
-          title="Hapus Lagu dari Unduhan"
-          message={`Apakah Anda yakin ingin menghapus lagu "${songToDelete?.judul}" dari daftar unduhan?`}
+          title="Remove Song from Downloads"
+          message={`Are you sure you want to remove the song \"${songToDelete?.judul}\" from your downloads?`}
           type="delete"
-          confirmText="Hapus"
+          confirmText="Remove"
         />
       </div>
     </div>

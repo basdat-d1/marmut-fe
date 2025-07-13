@@ -27,7 +27,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
   if (!isOpen || !selectedPackage) return null;
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'IDR',
     }).format(amount);
@@ -50,11 +50,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           <span className="text-xl">×</span>
         </button>
         <CardHeader>
-          <CardTitle className="text-white">Pembayaran Paket</CardTitle>
+          <CardTitle className="text-white">Package Payment</CardTitle>
         </CardHeader>
         <CardContent>
           <div className="mb-6">
-            <h3 className="text-lg font-medium text-white mb-4">Informasi Paket yang Ingin Dibeli:</h3>
+            <h3 className="text-lg font-medium text-white mb-4">Package Information to Purchase:</h3>
             <div className="bg-gray-800/50 p-4 rounded-lg">
               <div className="grid grid-cols-2 gap-4">
                 <div>
@@ -70,19 +70,19 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
           </div>
           <form onSubmit={onSubmit} className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-white mb-2">
-                Metode Pembayaran
-              </label>
+                              <label className="block text-sm font-medium text-white mb-2">
+                  Payment Method
+                </label>
               <select
                 value={paymentMethod}
                 onChange={(e) => setPaymentMethod(e.target.value)}
                 required
                 className="w-full p-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white focus:border-green-500 focus:ring-green-500"
               >
-                <option value="" className="bg-gray-800">Pilih metode pembayaran</option>
-                <option value="Transfer Bank" className="bg-gray-800">Transfer Bank</option>
-                <option value="Kartu Kredit" className="bg-gray-800">Kartu Kredit</option>
-                <option value="E-Wallet" className="bg-gray-800">E-Wallet</option>
+                                  <option value="" className="bg-gray-800">Select payment method</option>
+                  <option value="Transfer Bank" className="bg-gray-800">Bank Transfer</option>
+                  <option value="Kartu Kredit" className="bg-gray-800">Credit Card</option>
+                  <option value="E-Wallet" className="bg-gray-800">E-Wallet</option>
               </select>
             </div>
             <div className="flex space-x-2">

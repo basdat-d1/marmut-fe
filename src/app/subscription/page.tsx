@@ -103,7 +103,7 @@ export default function SubscriptionPage() {
   }
 
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('id-ID', {
+    return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'IDR'
     }).format(amount)
@@ -124,7 +124,7 @@ export default function SubscriptionPage() {
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 p-6">
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-white mb-2">Langganan Paket</h1>
+          <h1 className="text-3xl font-bold text-white mb-2">Subscription</h1>
           <p className="text-gray-400">Choose your subscription plan</p>
         </div>
 
@@ -179,7 +179,7 @@ export default function SubscriptionPage() {
                 className="border-gray-700 text-white hover:bg-gray-800"
               >
                 <History className="w-4 h-4 mr-2" />
-                Riwayat Transaksi
+                Transaction History
               </Button>
               </Link>
             </div>

@@ -89,13 +89,13 @@ export default function AddSongToPlaylistPage() {
       if (res?.warning) {
         showToast(`Lagu "${songTitle}" sudah ada di playlist ini!`, 'info')
       } else {
-        showToast(`Berhasil menambahkan lagu "${songTitle}" ke playlist!`, 'success')
+        showToast(`Successfully added song "${songTitle}" to playlist!`, 'success')
         // Remove song from available list
         setAvailableSongs(prev => prev.filter(song => song.id !== songId))
         setFilteredSongs(prev => prev.filter(song => song.id !== songId))
       }
     } catch (error: any) {
-      showToast(error.message || 'Gagal menambahkan lagu ke playlist', 'error')
+      showToast(error.message || 'Failed to add song to playlist', 'error')
     } finally {
       setLoadingSongs(false)
     }
@@ -157,7 +157,7 @@ export default function AddSongToPlaylistPage() {
           <CardHeader>
             <CardTitle className="text-white text-2xl flex items-center gap-2">
               <Plus className="w-6 h-6 text-green-400" />
-              Tambah Lagu ke Playlist
+                              Add Song to Playlist
             </CardTitle>
             <p className="text-gray-400">Playlist: {playlist.judul}</p>
           </CardHeader>

@@ -125,9 +125,9 @@ export default function SongDetailPage() {
       setShowAddToPlaylist(false)
       setSelectedPlaylist('')
       if (res?.warning) {
-        showToast(`Lagu dengan judul '${song?.judul}' sudah ditambahkan di '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`, 'info')
+        showToast(`Song with title '${song?.judul}' has already been added to '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`, 'info')
       } else {
-        showToast(`Berhasil menambahkan Lagu dengan judul '${song?.judul}' ke '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`, 'success')
+        showToast(`Successfully added song with title '${song?.judul}' to '${playlists.find(p => p.id === selectedPlaylist)?.judul}'!`, 'success')
       }
     } catch (error: any) {
       showToast(error.message || 'Failed to add song to playlist', 'error')
@@ -152,9 +152,9 @@ export default function SongDetailPage() {
       }
       setShowDownloadConfirm(false)
       if (res?.warning) {
-        showToast(`Lagu dengan judul '${song?.judul}' sudah pernah di unduh!`, 'info')
+        showToast(`The song '${song?.judul}' has already been downloaded!`, 'info')
       } else {
-        showToast(`Berhasil mengunduh Lagu dengan judul '${song?.judul}'!`, 'success')
+        showToast(`Successfully downloaded the song '${song?.judul}'!`, 'success')
       }
     } catch (error: any) {
       showToast(error.message || 'Failed to download song', 'error')
@@ -162,7 +162,7 @@ export default function SongDetailPage() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
@@ -223,7 +223,7 @@ export default function SongDetailPage() {
               className="text-white hover:bg-gray-800 ml-auto"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Kembali
+              Back
             </Button>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -255,15 +255,15 @@ export default function SongDetailPage() {
                 </div>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-400">Durasi:</label>
-                <p className="text-white">{song.durasi} menit</p>
+                <label className="text-sm font-medium text-gray-400">Duration:</label>
+                <p className="text-white">{song.durasi} minutes</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-400">Tanggal Rilis:</label>
+                <label className="text-sm font-medium text-gray-400">Release Date:</label>
                 <p className="text-white">{formatDate(song.tanggal_rilis)}</p>
               </div>
               <div>
-                <label className="text-sm font-medium text-gray-400">Tahun:</label>
+                <label className="text-sm font-medium text-gray-400">Year:</label>
                 <p className="text-white">{song.tahun}</p>
               </div>
               <div>
@@ -377,7 +377,7 @@ export default function SongDetailPage() {
                     className="btn-spotify"
                     disabled={!selectedPlaylist}
                   >
-                    Tambah
+                    Add
                   </Button>
                   <Button 
                     onClick={() => {
@@ -387,7 +387,7 @@ export default function SongDetailPage() {
                     variant="outline"
                     className="border-gray-700 text-white hover:bg-gray-800"
                   >
-                    Kembali
+                    Back
                   </Button>
                 </div>
               </CardContent>

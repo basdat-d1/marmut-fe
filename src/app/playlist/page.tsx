@@ -93,7 +93,7 @@ export default function PlaylistPage() {
   }
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('id-ID', {
+    return new Date(dateString).toLocaleDateString('en-US', {
       day: 'numeric',
       month: 'long',
       year: 'numeric'
@@ -125,7 +125,7 @@ export default function PlaylistPage() {
               className="btn-spotify"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Tambah Playlist
+              Add Playlist
             </Button>
           </div>
         </div>
@@ -136,14 +136,14 @@ export default function PlaylistPage() {
             <CardHeader>
               <CardTitle className="text-white flex items-center gap-2">
                 <Plus className="w-5 h-5 text-green-400" />
-                Tambah Playlist
+                Add Playlist
               </CardTitle>
             </CardHeader>
             <CardContent>
               <form onSubmit={handleCreatePlaylist} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
-                    Judul
+                    Title
                   </label>
                   <Input
                     type="text"
@@ -156,7 +156,7 @@ export default function PlaylistPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-white mb-2">
-                    Deskripsi
+                    Description
                   </label>
                   <Input
                     type="text"
@@ -195,14 +195,14 @@ export default function PlaylistPage() {
               <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
                 <Library className="w-10 h-10 text-green-400" />
               </div>
-              <h3 className="text-xl font-semibold text-white mb-3">Anda Belum Memiliki Playlist</h3>
-              <p className="text-gray-400 mb-6 max-w-md mx-auto">Mulai membuat playlist pertama Anda untuk mengorganisir musik favorit</p>
+              <h3 className="text-xl font-semibold text-white mb-3">You Don't Have Any Playlists Yet</h3>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">Start creating your first playlist to organize your favorite music</p>
               <Button 
                 onClick={() => setShowCreateForm(true)}
                 className="btn-spotify px-8 py-3 text-lg"
               >
                 <Plus className="w-5 h-5 mr-2" />
-                Buat Playlist Pertama
+                Create First Playlist
               </Button>
             </CardContent>
           </Card>

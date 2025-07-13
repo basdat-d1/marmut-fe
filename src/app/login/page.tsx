@@ -10,38 +10,39 @@ import { Input } from '@/components/ui/input'
 import { Eye, EyeOff, Music } from 'lucide-react'
 
 export default function LoginPage() {
-  const { login, user } = useAuth()
+  const { login, user, label, loading } = useAuth()
   const { showToast } = useToast()
   const router = useRouter()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
   })
-  const [loading, setLoading] = useState(false)
+  const [loadingForm, setLoadingForm] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [redirecting, setRedirecting] = useState(false)
 
-  // Redirect if already logged in
+  // Redirect if already logged in (and not loading)
   useEffect(() => {
-    if (user) {
+    if (!loading && (user || label) && !redirecting) {
+      setRedirecting(true)
       router.push('/dashboard')
     }
-  }, [user, router])
+  }, [user, label, loading, router, redirecting])
 
-  if (user) {
+  if (user || label) {
     return null
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
-
+    setLoadingForm(true)
     try {
       await login(formData.email, formData.password)
-      router.push('/dashboard')
+      // Jangan langsung router.push di sini, biarkan useEffect yang handle redirect
     } catch (error: any) {
       showToast(error.message || 'Login failed. Please check your credentials.', 'error')
     } finally {
-      setLoading(false)
+      setLoadingForm(false)
     }
   }
 
@@ -119,10 +120,10 @@ export default function LoginPage() {
             <div className="flex justify-center">
               <Button
                 type="submit"
-                disabled={loading}
+                disabled={loadingForm}
                 className="btn-spotify px-8 py-2"
               >
-                {loading ? (
+                {loadingForm ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
                     Signing In...

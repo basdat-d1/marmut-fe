@@ -305,6 +305,17 @@ export const podcastAPI = {
     })
   },
 
+  async getPodcastDetail(podcastId: string) {
+    return apiRequest(`/api/podcast/${podcastId}/`)
+  },
+
+  async updatePodcast(podcastId: string, podcastData: { judul: string; genres: string[] }) {
+    return apiRequest(`/api/podcast/${podcastId}/update/`, {
+      method: 'PUT',
+      body: JSON.stringify(podcastData),
+    })
+  },
+
   async deletePodcast(podcastId: string) {
     return apiRequest(`/api/podcast/${podcastId}/delete/`, {
       method: 'DELETE',
@@ -329,17 +340,13 @@ export const podcastAPI = {
     })
   },
 
-  async deleteEpisode(episodeId: string) {
-    // For now, we'll need to pass both podcast ID and episode ID
-    // This is a temporary solution - the backend should be updated to handle episode deletion by episode ID only
-    return apiRequest(`/api/podcast/episodes/${episodeId}/delete/`, {
+  async deleteEpisode(podcastId: string, episodeId: string) {
+    return apiRequest(`/api/podcast/${podcastId}/episodes/${episodeId}/delete/`, {
       method: 'DELETE',
     })
   },
 
-  async getPodcastDetail(podcastId: string) {
-    return apiRequest(`/api/play-podcast/${podcastId}/`)
-  },
+
 
   async getAllPodcasts() {
     return apiRequest('/api/play-podcast/')

@@ -16,14 +16,20 @@ interface User {
   is_songwriter?: boolean
   is_podcaster?: boolean
   is_premium?: boolean
-  is_label?: boolean
   kontak?: string
   type?: string
   roles?: string[]
 }
 
+interface Label {
+  email: string
+  nama: string
+  kontak?: string
+}
+
 interface AuthContextType {
   user: User | null
+  label: Label | null
   loading: boolean
   login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
@@ -71,6 +77,7 @@ export function ToastProvider({ children }: { children: React.ReactNode }) {
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
+  const [label, setLabel] = useState<Label | null>(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
@@ -83,12 +90,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authAPI.getCurrentUser()
       if (response.user) {
         setUser(response.user)
+        setLabel(null)
+      } else if (response.label) {
+        setLabel(response.label)
+        setUser(null)
       } else if (response.email) {
-        // Handle direct user object response
+        // Handle direct user object response (fallback)
         setUser(response)
+        setLabel(null)
       }
     } catch (error) {
       setUser(null)
+      setLabel(null)
     } finally {
       setLoading(false)
     }
@@ -99,9 +112,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const response = await authAPI.getCurrentUser()
       if (response.user) {
         setUser(response.user)
+        setLabel(null)
+      } else if (response.label) {
+        setLabel(response.label)
+        setUser(null)
       } else if (response.email) {
-        // Handle direct user object response
+        // Handle direct user object response (fallback)
         setUser(response)
+        setLabel(null)
       }
     } catch (error) {
       console.error('Failed to refresh user:', error)
@@ -110,14 +128,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const login = async (email: string, password: string) => {
     try {
-      const response = await authAPI.login(email, password)
-      if (response.message && response.user) {
-        setUser(response.user)
-      } else if (response.success) {
-        await checkAuthStatus()
-      } else {
-        throw new Error(response.message || 'Login failed')
-      }
+      await authAPI.login(email, password)
+      await refreshUser() // Selalu refresh context dari backend/session setelah login
     } catch (error: any) {
       throw new Error(error.message || 'Login failed')
     }
@@ -127,9 +139,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       await authAPI.logout()
       setUser(null)
+      setLabel(null)
     } catch (error) {
       console.error('Logout error:', error)
       setUser(null)
+      setLabel(null)
     }
   }
 
@@ -153,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const value = {
     user,
+    label,
     loading,
     login,
     logout,
