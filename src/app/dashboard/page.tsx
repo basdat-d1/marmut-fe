@@ -117,8 +117,18 @@ export default function DashboardPage() {
     if (profile.is_songwriter) roles.push('Songwriter')
     if (profile.is_podcaster) roles.push('Podcaster')
     if (profile.is_label) roles.push('Label')
-    // Don't show Music Lover role as per requirements
+    
+    // If no specific roles, show as Regular User
+    if (roles.length === 0) {
+      return 'Regular User'
+    }
+    
     return roles.join(', ')
+  }
+
+  // Check if user should see album stats
+  const shouldShowAlbums = () => {
+    return profile.is_artist || profile.is_songwriter || profile.is_label
   }
 
   const formatDate = (dateString: string) => {
@@ -143,7 +153,7 @@ export default function DashboardPage() {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <div className={`grid grid-cols-1 ${shouldShowAlbums() ? 'md:grid-cols-3' : 'md:grid-cols-2'} gap-6 mb-8`}>
           <Card className="bg-gray-900/80 border-0 shadow-md">
             <CardContent className="flex flex-col items-center justify-center py-6">
               <span className="text-gray-400 mb-1">Playlists</span>
@@ -158,13 +168,15 @@ export default function DashboardPage() {
               <Crown className="w-8 h-8 text-yellow-300 mt-2" />
             </CardContent>
           </Card>
-          <Card className="bg-gray-900/80 border-0 shadow-md">
-            <CardContent className="flex flex-col items-center justify-center py-6">
-              <span className="text-gray-400 mb-1">Albums</span>
-              <span className="text-4xl font-bold text-blue-400">{profile.albums?.length || 0}</span>
-              <Album className="w-8 h-8 text-blue-400 mt-2" />
-            </CardContent>
-          </Card>
+          {shouldShowAlbums() && (
+            <Card className="bg-gray-900/80 border-0 shadow-md">
+              <CardContent className="flex flex-col items-center justify-center py-6">
+                <span className="text-gray-400 mb-1">Albums</span>
+                <span className="text-4xl font-bold text-blue-400">{profile.albums?.length || 0}</span>
+                <Album className="w-8 h-8 text-blue-400 mt-2" />
+              </CardContent>
+            </Card>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
