@@ -158,35 +158,35 @@ export default function Navbar() {
         <Link href="/dashboard" className="text-2xl font-bold text-green-500 flex-shrink-0">
           Marmut
         </Link>
-          <div className="hidden md:flex space-x-3 ml-8">
+          <div className="hidden md:flex space-x-2 ml-8">
             <Link href="/dashboard">
-            <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/dashboard' ? 'border-b-2 border-white' : ''}`}>
-              <Home className="w-4 h-4 mr-1" />
-              <span className="text-sm">Dashboard</span>
+            <Button variant="ghost" className={`text-white hover:bg-gray-800 text-xs px-2 py-1.5 relative ${pathname === '/dashboard' ? 'border-b-2 border-white' : ''}`}>
+              <Home className="w-3 h-3 mr-1" />
+              <span className="text-xs">Dashboard</span>
             </Button>
             </Link>
 
             <Link href="/label-album">
-                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname.startsWith('/label-album') ? 'border-b-2 border-white' : ''}`}>
-                <Music className="w-4 h-4 mr-1" />
-                <span className="text-sm">Album & Songs</span>
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-xs px-2 py-1.5 relative ${pathname.startsWith('/label-album') ? 'border-b-2 border-white' : ''}`}>
+                <Music className="w-3 h-3 mr-1" />
+                <span className="text-xs">Album & Songs</span>
               </Button>
             </Link>
 
             <Link href="/royalty">
-                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/royalty' ? 'border-b-2 border-white' : ''}`}>
-                <DollarSign className="w-4 h-4 mr-1" />
-                <span className="text-sm">Royalty</span>
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-xs px-2 py-1.5 relative ${pathname === '/royalty' ? 'border-b-2 border-white' : ''}`}>
+                <DollarSign className="w-3 h-3 mr-1" />
+                <span className="text-xs">Royalty</span>
               </Button>
             </Link>
 
             <Button 
               variant="ghost" 
               onClick={logout}
-              className="text-white hover:bg-gray-800 text-sm px-3 py-1.5"
+              className="text-white hover:bg-gray-800 text-xs px-2 py-1.5"
             >
-              <LogOut className="w-4 h-4 mr-1" />
-              <span className="text-sm">Logout</span>
+              <LogOut className="w-3 h-3 mr-1" />
+              <span className="text-xs">Logout</span>
             </Button>
           </div>
           <button
@@ -251,39 +251,38 @@ export default function Navbar() {
         <Link href="/dashboard" className="text-2xl font-bold text-green-500 flex-shrink-0">
           Marmut
         </Link>
-          <div className="hidden md:flex space-x-3 ml-8">
-            {/* Dashboard - always visible */}
+          <div className="hidden md:flex space-x-2 ml-8">
             <Link href="/dashboard">
-                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/dashboard' ? 'border-b-2 border-white' : ''}`}>
-                <Home className="w-4 h-4 mr-1" />
-                <span className="text-sm">Dashboard</span>
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-xs px-2 py-1.5 relative ${pathname === '/dashboard' ? 'border-b-2 border-white' : ''}`}>
+                <Home className="w-3 h-3 mr-1" />
+                <span className="text-xs">Dashboard</span>
                 </Button>
               </Link>
 
             {isUserBiasaOrArtistOrSongwriterOrPodcaster && (
               <>
               <Link href="/chart">
-                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/chart' ? 'border-b-2 border-white' : ''}`}>
-                  <BarChart3 className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Chart</span>
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-xs px-2 py-1.5 relative ${pathname === '/chart' ? 'border-b-2 border-white' : ''}`}>
+                  <BarChart3 className="w-3 h-3 mr-1" />
+                  <span className="text-xs">Chart</span>
                 </Button>
               </Link>
                 <Link href="/search">
-                  <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/search' ? 'border-b-2 border-white' : ''}`}>
-                    <Search className="w-4 h-4 mr-1" />
-                    <span className="text-sm">Search</span>
+                  <Button variant="ghost" className={`text-white hover:bg-gray-800 text-xs px-2 py-1.5 relative ${pathname === '/search' ? 'border-b-2 border-white' : ''}`}>
+                    <Search className="w-3 h-3 mr-1" />
+                    <span className="text-xs">Search</span>
                   </Button>
                 </Link>
                 <Link href="/playlist">
-                  <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname.startsWith('/playlist') ? 'border-b-2 border-white' : ''}`}>
-                    <Library className="w-4 h-4 mr-1" />
-                    <span className="text-sm">Playlist</span>
+                  <Button variant="ghost" className={`text-white hover:bg-gray-800 text-xs px-2 py-1.5 relative ${pathname.startsWith('/playlist') ? 'border-b-2 border-white' : ''}`}>
+                    <Library className="w-3 h-3 mr-1" />
+                    <span className="text-xs">Playlist</span>
                   </Button>
                 </Link>
               <Link href="/subscription">
-                  <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname.startsWith('/subscription') ? 'border-b-2 border-white' : ''}`}>
-                    <Package className="w-4 h-4 mr-1" />
-                    <span className="text-sm">Subscription</span>
+                  <Button variant="ghost" className={`text-white hover:bg-gray-800 text-xs px-2 py-1.5 relative ${pathname.startsWith('/subscription') ? 'border-b-2 border-white' : ''}`}>
+                    <Package className="w-3 h-3 mr-1" />
+                    <span className="text-xs">Subscription</span>
                   </Button>
                 </Link>
               </>
@@ -292,9 +291,9 @@ export default function Navbar() {
             {/* Only for Premium */}
             {isPremium && (
               <Link href="/downloaded-songs">
-                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/downloaded-songs' ? 'border-b-2 border-white' : ''}`}>
-                  <Download className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Downloaded Songs</span>
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-xs px-2 py-1.5 relative ${pathname === '/downloaded-songs' ? 'border-b-2 border-white' : ''}`}>
+                  <Download className="w-3 h-3 mr-1" />
+                  <span className="text-xs">Downloaded Songs</span>
                 </Button>
               </Link>
             )}
@@ -302,27 +301,27 @@ export default function Navbar() {
             {/* Only for Podcaster */}
             {isPodcaster && (
               <Link href="/podcast">
-                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname.startsWith('/podcast') ? 'border-b-2 border-white' : ''}`}>
-                  <Mic className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Podcast</span>
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-xs px-2 py-1.5 relative ${pathname.startsWith('/podcast') ? 'border-b-2 border-white' : ''}`}>
+                  <Mic className="w-3 h-3 mr-1" />
+                  <span className="text-xs">Podcast</span>
               </Button>
             </Link>
           )}
 
             {isArtistOrSongwriter && (
               <Link href="/album">
-                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname.startsWith('/album') ? 'border-b-2 border-white' : ''}`}>
-                  <Music className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Album & Songs</span>
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-xs px-2 py-1.5 relative ${pathname.startsWith('/album') ? 'border-b-2 border-white' : ''}`}>
+                  <Music className="w-3 h-3 mr-1" />
+                  <span className="text-xs">Album & Songs</span>
                 </Button>
               </Link>
             )}
 
             {isArtistSongwriterLabel && (
               <Link href="/royalty">
-                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/royalty' ? 'border-b-2 border-white' : ''}`}>
-                  <DollarSign className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Royalty</span>
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-xs px-2 py-1.5 relative ${pathname === '/royalty' ? 'border-b-2 border-white' : ''}`}>
+                  <DollarSign className="w-3 h-3 mr-1" />
+                  <span className="text-xs">Royalty</span>
               </Button>
             </Link>
           )}
@@ -330,10 +329,10 @@ export default function Navbar() {
           <Button 
             variant="ghost" 
             onClick={logout}
-            className="text-white hover:bg-gray-800 text-sm px-3 py-1.5"
+            className="text-white hover:bg-gray-800 text-xs px-2 py-1.5"
           >
-            <LogOut className="w-4 h-4 mr-1" />
-            <span className="text-sm">Logout</span>
+            <LogOut className="w-3 h-3 mr-1" />
+            <span className="text-xs">Logout</span>
           </Button>
         </div>
         <button
