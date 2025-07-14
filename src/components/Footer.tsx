@@ -8,8 +8,7 @@ import { Music, Mic, Heart, Mail, MapPin, Phone } from 'lucide-react'
 export default function Footer() {
   const { user } = useAuth()
   const pathname = usePathname()
-  
-  // Only show footer on landing page for non-authenticated users
+
   if (user || pathname !== '/') {
     return null
   }

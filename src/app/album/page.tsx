@@ -72,8 +72,6 @@ export default function AlbumPage() {
   })
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [albumToDelete, setAlbumToDelete] = useState<Album | null>(null)
-  
-
 
   // Add modal state for create album+first song
   const [showCreateAlbumModal, setShowCreateAlbumModal] = useState(false)

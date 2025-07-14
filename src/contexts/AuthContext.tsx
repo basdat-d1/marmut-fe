@@ -129,7 +129,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const login = async (email: string, password: string) => {
     try {
       await authAPI.login(email, password)
-      await refreshUser() // Selalu refresh context dari backend/session setelah login
+      await refreshUser()
     } catch (error: any) {
       throw new Error(error.message || 'Login failed')
     }

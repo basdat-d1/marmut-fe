@@ -21,7 +21,6 @@ export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false)
   const [redirecting, setRedirecting] = useState(false)
 
-  // Redirect if already logged in (and not loading)
   useEffect(() => {
     if (!loading && (user || label) && !redirecting) {
       setRedirecting(true)

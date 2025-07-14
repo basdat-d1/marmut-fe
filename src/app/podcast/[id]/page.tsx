@@ -93,7 +93,6 @@ export default function PodcastDetailPage() {
     }
   }
 
-  // Helper to extract year from tanggal_rilis
   const getYear = (dateString: string) => {
     const date = new Date(dateString)
     return date.getFullYear()
@@ -107,10 +106,8 @@ export default function PodcastDetailPage() {
     return `${day}/${month}/${year}`
   }
 
-  // Remove re-formatting, backend already returns formatted string
   const formatDuration = (duration: string) => duration
 
-  // Check if current user is the podcaster
   const isPodcaster = user && podcast && user.nama === podcast.podcaster
 
   const handleAddEpisode = async (e: React.FormEvent) => {
@@ -230,12 +227,11 @@ export default function PodcastDetailPage() {
           </CardContent>
         </Card>
 
-        {/* Episodes List */}
         <Card className="bg-gray-900/80 border-0 shadow-md">
           <CardHeader className="flex flex-row items-center justify-between">
             <CardTitle className="text-white flex items-center gap-2">
               <Mic className="w-5 h-5 text-blue-400" />
-              Daftar Episode
+              Episodes List
             </CardTitle>
             {isPodcaster && (
               <Button className="btn-spotify" onClick={() => setShowAddEpisode(true)}>

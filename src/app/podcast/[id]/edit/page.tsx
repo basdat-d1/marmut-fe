@@ -8,8 +8,6 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { podcastAPI } from '@/lib/api'
 import { 
-  ArrowLeft,
-  Mic,
   Edit,
   Save
 } from 'lucide-react'

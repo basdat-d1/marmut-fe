@@ -2,10 +2,18 @@
 
 import { useEffect, useState } from 'react'
 import { useAuth, useToast } from '@/contexts/AuthContext'
+import { useRouter } from 'next/navigation'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Card, CardContent } from '@/components/ui/card'
+import { ConfirmationModal } from '@/components/ui/confirmation-modal'
 import { albumAPI } from '@/lib/api'
-import { Music, Search } from 'lucide-react'
+import { 
+  Music, 
+  Search,
+  Eye,
+  Trash2
+} from 'lucide-react'
 
 interface Album {
   id: string
@@ -19,9 +27,12 @@ interface Album {
 export default function LabelAlbumPage() {
   const { user, label } = useAuth()
   const { showToast } = useToast()
+  const router = useRouter()
   const [albums, setAlbums] = useState<Album[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [loading, setLoading] = useState(true)
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [albumToDelete, setAlbumToDelete] = useState<Album | null>(null)
 
   useEffect(() => {
     if (!user && !label) {
@@ -46,14 +57,42 @@ export default function LabelAlbumPage() {
     }
   }
 
+  const handleDeleteAlbum = async (albumId: string) => {
+    try {
+      await albumAPI.deleteAlbum(albumId)
+      await loadAlbums()
+      showToast('Album deleted successfully!', 'success')
+    } catch (error: unknown) {
+      showToast(error instanceof Error ? error.message : 'Failed to delete album', 'error')
+    }
+  }
+
+  const handleDeleteConfirm = async () => {
+    if (albumToDelete) {
+      await handleDeleteAlbum(albumToDelete.id)
+      setAlbumToDelete(null)
+    }
+    setShowDeleteConfirm(false)
+  }
+
+  const handleViewSongs = (album: Album) => {
+    router.push(`/label-album/${album.id}`)
+  }
+
   const filteredAlbums = albums.filter(album =>
     album.judul.toLowerCase().includes(searchTerm.toLowerCase())
   )
 
-  const formatDuration = (seconds: number) => {
-    const hours = Math.floor(seconds / 3600)
-    const minutes = Math.floor((seconds % 3600) / 60)
-    return `${hours}h ${minutes}m`
+  const formatDuration = (minutes: number) => {
+    if (minutes < 1) return '0 min'
+
+    const hours = Math.floor(minutes / 60)
+    const mins = minutes % 60
+    
+    if (hours > 0) {
+      return `${hours}h ${mins}m`
+    }
+    return `${mins} min`
   }
 
   const formatDate = (dateString: string) => {
@@ -70,6 +109,17 @@ export default function LabelAlbumPage() {
         <div className="text-center">
           <h1 className="text-2xl font-bold text-red-400 mb-4">Access Denied</h1>
           <p className="text-gray-400">Only labels can access this page.</p>
+        </div>
+      </div>
+    )
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+          <p className="mt-4 text-gray-400">Loading albums...</p>
         </div>
       </div>
     )
@@ -97,47 +147,87 @@ export default function LabelAlbumPage() {
           </div>
         </div>
 
-        {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {[1, 2, 3, 4, 5, 6].map((i) => (
-              <Card key={i} className="bg-gray-900/80 border-0 shadow-md animate-pulse">
-                <div className="aspect-square bg-gray-700 rounded-t-lg"></div>
-                <CardContent className="p-4">
-                  <div className="h-4 bg-gray-700 rounded mb-2"></div>
-                  <div className="h-3 bg-gray-700 rounded w-2/3"></div>
-                </CardContent>
-              </Card>
-            ))}
+        {/* Albums Table or Empty State */}
+        {filteredAlbums.length === 0 ? (
+          <Card className="bg-gray-900/80 border-0 shadow-md">
+            <CardContent className="text-center py-16">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-500/20 to-green-600/20 rounded-full flex items-center justify-center mx-auto mb-6">
+                <Music className="w-10 h-10 text-green-400" />
           </div>
-        ) : filteredAlbums.length === 0 ? (
-          <div className="text-center py-12">
-            <Music className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-xl font-semibold text-white mb-2">No albums found</h3>
-            <p className="text-gray-400 mb-6">
+              <h3 className="text-xl font-semibold text-white mb-3">No Albums Found</h3>
+              <p className="text-gray-400 mb-6 max-w-md mx-auto">
               {searchTerm ? 'Try adjusting your search terms' : 'No albums are published under your label yet'}
             </p>
-          </div>
+            </CardContent>
+          </Card>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <Card className="bg-gray-900/80 border-0 shadow-md">
+            <CardHeader>
+              <CardTitle className="text-white flex items-center">
+                <Music className="w-5 h-5 mr-2 text-green-400" />
+                Album List
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-800/50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Title</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Number of Songs</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Total Duration</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Action</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-800">
             {filteredAlbums.map((album) => (
-              <Card key={album.id} className="bg-gray-900/80 border-0 shadow-md hover:border-green-500/50 transition-all group">
-                <div className="aspect-square bg-gradient-to-br from-green-600 to-green-800 rounded-t-lg flex items-center justify-center">
-                  <Music className="w-16 h-16 text-white/80" />
+                      <tr key={album.id} className="hover:bg-gray-800/30 transition-colors">
+                        <td className="px-6 py-4 whitespace-nowrap text-white font-medium">{album.judul}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-gray-300">{album.jumlah_lagu}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-gray-300">{formatDuration(album.total_durasi)}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <div className="flex flex-row items-center space-x-2">
+                            <Button 
+                              size="sm" 
+                              className="w-10 h-10 rounded-full flex items-center justify-center mx-1" 
+                              title="View Song List" 
+                              onClick={() => handleViewSongs(album)}
+                            >
+                              <Eye className="w-6 h-6" />
+                            </Button>
+                            <Button 
+                              size="sm" 
+                              variant="outline" 
+                              className="w-10 h-10 rounded-full flex items-center justify-center mx-1 border border-red-500 text-red-500 hover:bg-red-500 hover:text-white bg-transparent" 
+                              title="Delete" 
+                              onClick={() => { setAlbumToDelete(album); setShowDeleteConfirm(true); }}
+                            >
+                              <Trash2 className="w-6 h-6" />
+                            </Button>
                 </div>
-                <CardContent className="p-4">
-                  <h3 className="font-bold text-lg text-white group-hover:text-green-400 transition-colors mb-2">
-                    {album.judul}
-                  </h3>
-                  <div className="space-y-1 text-sm text-gray-400">
-                    <p>{album.jumlah_lagu} songs</p>
-                    <p>{formatDuration(album.total_durasi)}</p>
-                    <p>Released: {formatDate(album.tanggal_rilis)}</p>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
                   </div>
                 </CardContent>
               </Card>
-            ))}
-          </div>
         )}
+
+        {/* Confirmation Modal */}
+        <ConfirmationModal
+          isOpen={showDeleteConfirm}
+          onClose={() => {
+            setShowDeleteConfirm(false)
+            setAlbumToDelete(null)
+          }}
+          onConfirm={handleDeleteConfirm}
+          title="Delete Album"
+          message={`Are you sure you want to delete "${albumToDelete?.judul}"? This action cannot be undone.`}
+          type="delete"
+          confirmText="Delete Album"
+        />
       </div>
     </div>
   )

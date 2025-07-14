@@ -174,7 +174,7 @@ export default function PodcastPage() {
               <form onSubmit={handleCreatePodcast} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Judul: [isian]
+                    Judul
                   </label>
                   <Input
                     type="text"
@@ -187,7 +187,7 @@ export default function PodcastPage() {
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-300 mb-2">
-                    Genre: [Multiselect daftar genre pada marmut]
+                    Genre
                   </label>
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
                     {availableGenres.map((genre) => (
@@ -339,7 +339,7 @@ export default function PodcastPage() {
                             onClick={() => router.push(`/podcast/${podcast.id}`)}
                           >
                             <Eye className="w-4 h-4 mr-1" />
-                            Lihat Daftar Episode
+                            View Episode List
                           </Button>
                           <Button 
                             size="sm" 

@@ -88,17 +88,7 @@ export default function SubscriptionPage() {
     setShowCancelConfirm(false)
   }
 
-  const loadTransactionHistory = async () => {
-    try {
-      const data = await subscriptionAPI.getTransactionHistory()
-      setTransactions(data.transactions || [])
-    } catch (error) {
-      showToast('Failed to load transaction history', 'error')
-    }
-  }
-
   const formatDate = (dateString: string) => {
-    // Handle the formatted date string from API
     return dateString
   }
 

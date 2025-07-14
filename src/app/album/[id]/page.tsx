@@ -244,7 +244,7 @@ export default function AlbumDetailPage() {
                               onClick={() => router.push(`/song/${song.id}`)}
                             >
                               <Eye className="w-4 h-4 mr-1" />
-                              Lihat Detail
+                              View Details
                             </Button>
                             <Button
                               size="sm"

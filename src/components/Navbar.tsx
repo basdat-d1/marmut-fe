@@ -93,52 +93,10 @@ export default function Navbar() {
     }
   }
 
-  const getTypeLabel = (type: string) => {
-    switch (type) {
-      case 'SONG':
-        return 'SONG'
-      case 'PODCAST':
-        return 'PODCAST'
-      case 'USER_PLAYLIST':
-        return 'USER PLAYLIST'
-      default:
-        return type
-    }
-  }
-
-  const handleViewItem = (item: SearchResult) => {
-    setIsSearchOpen(false)
-    setSearchResults([])
-    setSearchQuery('')
-    
-    switch (item.tipe) {
-      case 'SONG':
-        router.push(`/song/${item.id}`)
-        break
-      case 'PODCAST':
-        router.push(`/podcast/${item.id}`)
-        break
-      case 'USER_PLAYLIST':
-        router.push(`/playlist/${item.id}`)
-        break
-    }
-  }
-
-  const handlePlayItem = (item: SearchResult) => {
-    if (item.tipe === 'SONG') {
-      setIsSearchOpen(false)
-      setSearchResults([])
-      setSearchQuery('')
-      router.push(`/song/${item.id}`)
-    }
-  }
-
-  // Don't show navbar on auth pages (login/register)
   if (!user && !label && isAuthPage) {
     return null
   }
 
-  // Show guest navbar only on landing page for non-authenticated users
   if (!user && !label && isLandingPage) {
     return (
       <nav className="bg-black/95 backdrop-blur-sm text-white px-6 py-4 border-b border-gray-800">
@@ -160,7 +118,6 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Mobile menu button */}
           <button
             className="md:hidden focus-ring"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -171,7 +128,6 @@ export default function Navbar() {
           </button>
         </div>
 
-        {/* Mobile menu */}
         {isMenuOpen && (
           <div className="md:hidden mt-4 space-y-2">
             <Link href="/login">
@@ -190,7 +146,6 @@ export default function Navbar() {
     )
   }
 
-  // Don't show navbar if no user or label is logged in and not on landing page
   if (!user && !label) {
     return null
   }
@@ -198,28 +153,28 @@ export default function Navbar() {
   if (label) {
   return (
     <>
-    <nav className="bg-black text-white px-6 py-4 border-b border-gray-800">
+    <nav className="bg-black text-white px-6 py-3 border-b border-gray-800">
       <div className="max-w-7xl mx-auto flex justify-between items-center">
-        <Link href="/dashboard" className="text-2xl font-bold text-green-500">
+        <Link href="/dashboard" className="text-2xl font-bold text-green-500 flex-shrink-0">
           Marmut
         </Link>
-          <div className="hidden md:flex space-x-3">
+          <div className="hidden md:flex space-x-3 ml-8">
             <Link href="/dashboard">
-            <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+            <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/dashboard' ? 'border-b-2 border-white' : ''}`}>
               <Home className="w-4 h-4 mr-1" />
               <span className="text-sm">Dashboard</span>
             </Button>
             </Link>
 
             <Link href="/label-album">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname.startsWith('/label-album') ? 'border-b-2 border-white' : ''}`}>
                 <Music className="w-4 h-4 mr-1" />
-                <span className="text-sm">Album</span>
+                <span className="text-sm">Album & Songs</span>
               </Button>
             </Link>
 
             <Link href="/royalty">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/royalty' ? 'border-b-2 border-white' : ''}`}>
                 <DollarSign className="w-4 h-4 mr-1" />
                 <span className="text-sm">Royalty</span>
               </Button>
@@ -228,13 +183,12 @@ export default function Navbar() {
             <Button 
               variant="ghost" 
               onClick={logout}
-              className="text-white hover:bg-gray-800"
+              className="text-white hover:bg-gray-800 text-sm px-3 py-1.5"
             >
-              <LogOut className="w-4 h-4 mr-2" />
-              Logout
+              <LogOut className="w-4 h-4 mr-1" />
+              <span className="text-sm">Logout</span>
             </Button>
           </div>
-          {/* Mobile menu button */}
           <button
             className="md:hidden"
             onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -248,19 +202,19 @@ export default function Navbar() {
         {isMenuOpen && (
           <div className="md:hidden mt-4 space-y-2">
             <Link href="/dashboard">
-              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+              <Button variant="ghost" className={`w-full text-white hover:bg-gray-800 justify-start ${pathname === '/dashboard' ? 'bg-gray-800' : ''}`}>
                 <Home className="w-4 h-4 mr-2" />
                 Dashboard
               </Button>
             </Link>
             <Link href="/label-album">
-              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+              <Button variant="ghost" className={`w-full text-white hover:bg-gray-800 justify-start ${pathname.startsWith('/label-album') ? 'bg-gray-800' : ''}`}>
                 <Music className="w-4 h-4 mr-2" />
                 Album
               </Button>
             </Link>
             <Link href="/royalty">
-              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+              <Button variant="ghost" className={`w-full text-white hover:bg-gray-800 justify-start ${pathname === '/royalty' ? 'bg-gray-800' : ''}`}>
                 <DollarSign className="w-4 h-4 mr-2" />
                 Royalty
               </Button>
@@ -291,44 +245,43 @@ export default function Navbar() {
     const isArtistSongwriterLabel = isArtist || isSongwriter;
 
     return (
-      <>
-      <nav className="bg-black text-white px-6 py-4 border-b border-gray-800">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
-          <Link href="/dashboard" className="text-2xl font-bold text-green-500">
-            Marmut
-          </Link>
-          <div className="hidden md:flex space-x-3">
+    <>
+    <nav className="bg-black text-white px-6 py-3 border-b border-gray-800">
+      <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <Link href="/dashboard" className="text-2xl font-bold text-green-500 flex-shrink-0">
+          Marmut
+        </Link>
+          <div className="hidden md:flex space-x-3 ml-8">
             {/* Dashboard - always visible */}
             <Link href="/dashboard">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/dashboard' ? 'border-b-2 border-white' : ''}`}>
                 <Home className="w-4 h-4 mr-1" />
                 <span className="text-sm">Dashboard</span>
                 </Button>
               </Link>
 
-            {/* Only for User Biasa/Artist/Songwriter/Podcaster */}
             {isUserBiasaOrArtistOrSongwriterOrPodcaster && (
               <>
               <Link href="/chart">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/chart' ? 'border-b-2 border-white' : ''}`}>
                   <BarChart3 className="w-4 h-4 mr-1" />
                   <span className="text-sm">Chart</span>
                 </Button>
               </Link>
                 <Link href="/search">
-                  <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                  <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/search' ? 'border-b-2 border-white' : ''}`}>
                     <Search className="w-4 h-4 mr-1" />
                     <span className="text-sm">Search</span>
                   </Button>
                 </Link>
                 <Link href="/playlist">
-                  <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                  <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname.startsWith('/playlist') ? 'border-b-2 border-white' : ''}`}>
                     <Library className="w-4 h-4 mr-1" />
                     <span className="text-sm">Playlist</span>
                   </Button>
                 </Link>
               <Link href="/subscription">
-                  <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                  <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname.startsWith('/subscription') ? 'border-b-2 border-white' : ''}`}>
                     <Package className="w-4 h-4 mr-1" />
                     <span className="text-sm">Subscription</span>
                   </Button>
@@ -339,7 +292,7 @@ export default function Navbar() {
             {/* Only for Premium */}
             {isPremium && (
               <Link href="/downloaded-songs">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/downloaded-songs' ? 'border-b-2 border-white' : ''}`}>
                   <Download className="w-4 h-4 mr-1" />
                   <span className="text-sm">Downloaded Songs</span>
                 </Button>
@@ -349,17 +302,16 @@ export default function Navbar() {
             {/* Only for Podcaster */}
             {isPodcaster && (
               <Link href="/podcast">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname.startsWith('/podcast') ? 'border-b-2 border-white' : ''}`}>
                   <Mic className="w-4 h-4 mr-1" />
                   <span className="text-sm">Podcast</span>
               </Button>
             </Link>
           )}
 
-            {/* Only for Artist/Songwriter */}
             {isArtistOrSongwriter && (
               <Link href="/album">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname.startsWith('/album') ? 'border-b-2 border-white' : ''}`}>
                   <Music className="w-4 h-4 mr-1" />
                   <span className="text-sm">Album & Songs</span>
                 </Button>
@@ -368,7 +320,7 @@ export default function Navbar() {
 
             {isArtistSongwriterLabel && (
               <Link href="/royalty">
-                <Button variant="ghost" className="text-white hover:bg-gray-800 text-base px-3 py-1.5">
+                <Button variant="ghost" className={`text-white hover:bg-gray-800 text-sm px-3 py-1.5 relative ${pathname === '/royalty' ? 'border-b-2 border-white' : ''}`}>
                   <DollarSign className="w-4 h-4 mr-1" />
                   <span className="text-sm">Royalty</span>
               </Button>
@@ -378,13 +330,12 @@ export default function Navbar() {
           <Button 
             variant="ghost" 
             onClick={logout}
-            className="text-white hover:bg-gray-800"
+            className="text-white hover:bg-gray-800 text-sm px-3 py-1.5"
           >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
+            <LogOut className="w-4 h-4 mr-1" />
+            <span className="text-sm">Logout</span>
           </Button>
         </div>
-        {/* Mobile menu button */}
         <button
           className="md:hidden"
           onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -394,11 +345,10 @@ export default function Navbar() {
           </svg>
         </button>
       </div>
-        {/* Mobile menu for users */}
       {isMenuOpen && (
         <div className="md:hidden mt-4 space-y-2">
           <Link href="/dashboard">
-            <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+            <Button variant="ghost" className={`w-full text-white hover:bg-gray-800 justify-start ${pathname === '/dashboard' ? 'bg-gray-800' : ''}`}>
               <Home className="w-4 h-4 mr-2" />
               Dashboard
             </Button>
@@ -406,25 +356,25 @@ export default function Navbar() {
             {isUserBiasaOrArtistOrSongwriterOrPodcaster && (
               <>
             <Link href="/chart">
-              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+              <Button variant="ghost" className={`w-full text-white hover:bg-gray-800 justify-start ${pathname === '/chart' ? 'bg-gray-800' : ''}`}>
                 <BarChart3 className="w-4 h-4 mr-2" />
                 Chart
               </Button>
             </Link>
             <Link href="/search">
-              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+              <Button variant="ghost" className={`w-full text-white hover:bg-gray-800 justify-start ${pathname === '/search' ? 'bg-gray-800' : ''}`}>
                 <Search className="w-4 h-4 mr-2" />
                     Search
               </Button>
             </Link>
             <Link href="/playlist">
-              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+              <Button variant="ghost" className={`w-full text-white hover:bg-gray-800 justify-start ${pathname.startsWith('/playlist') ? 'bg-gray-800' : ''}`}>
                 <Library className="w-4 h-4 mr-2" />
                     Playlist
               </Button>
             </Link>
             <Link href="/subscription">
-              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+              <Button variant="ghost" className={`w-full text-white hover:bg-gray-800 justify-start ${pathname.startsWith('/subscription') ? 'bg-gray-800' : ''}`}>
                 <Package className="w-4 h-4 mr-2" />
                     Subscription Package
               </Button>
@@ -433,7 +383,7 @@ export default function Navbar() {
           )}
             {isPremium && (
             <Link href="/downloaded-songs">
-              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+              <Button variant="ghost" className={`w-full text-white hover:bg-gray-800 justify-start ${pathname === '/downloaded-songs' ? 'bg-gray-800' : ''}`}>
                 <Download className="w-4 h-4 mr-2" />
                   Downloaded Songs
               </Button>
@@ -441,7 +391,7 @@ export default function Navbar() {
           )}
             {isPodcaster && (
             <Link href="/podcast">
-              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+              <Button variant="ghost" className={`w-full text-white hover:bg-gray-800 justify-start ${pathname.startsWith('/podcast') ? 'bg-gray-800' : ''}`}>
                 <Mic className="w-4 h-4 mr-2" />
                   Kelola Podcast
               </Button>
@@ -449,7 +399,7 @@ export default function Navbar() {
           )}
             {isArtistOrSongwriter && (
             <Link href="/album">
-              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+              <Button variant="ghost" className={`w-full text-white hover:bg-gray-800 justify-start ${pathname.startsWith('/album') ? 'bg-gray-800' : ''}`}>
                 <Music className="w-4 h-4 mr-2" />
                   Kelola Album & Songs
               </Button>
@@ -457,7 +407,7 @@ export default function Navbar() {
           )}
             {isArtistSongwriterLabel && (
             <Link href="/royalty">
-              <Button variant="ghost" className="w-full text-white hover:bg-gray-800 justify-start">
+              <Button variant="ghost" className={`w-full text-white hover:bg-gray-800 justify-start ${pathname === '/royalty' ? 'bg-gray-800' : ''}`}>
                 <DollarSign className="w-4 h-4 mr-2" />
                   Cek Royalti
               </Button>

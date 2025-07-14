@@ -36,7 +36,7 @@ interface Playlist {
 }
 
 export default function SongDetailPage() {
-  const { user } = useAuth()
+  const { user, label } = useAuth()
   const { showToast } = useToast()
   const router = useRouter()
   const params = useParams()
@@ -52,12 +52,12 @@ export default function SongDetailPage() {
   const [showAddToPlaylistConfirm, setShowAddToPlaylistConfirm] = useState(false)
 
   useEffect(() => {
-    if (!user) {
+    if (!user && !label) {
       router.push('/')
       return
     }
     loadSongData()
-  }, [user, router, songId])
+  }, [user, label, router, songId])
 
 
 
@@ -85,12 +85,20 @@ export default function SongDetailPage() {
 
   const loadSongData = async () => {
     try {
-      const [songData, playlistsData] = await Promise.all([
-        songAPI.getSong(songId),
-        playlistAPI.getUserPlaylists()
-      ])
-      setSong(songData.song)
-      setPlaylists(playlistsData.playlists || [])
+      if (label) {
+        // Labels only need song data, not playlists
+        const songData = await songAPI.getSong(songId)
+        setSong(songData.song)
+        setPlaylists([])
+      } else {
+        // Users need both song data and playlists
+        const [songData, playlistsData] = await Promise.all([
+          songAPI.getSong(songId),
+          playlistAPI.getUserPlaylists()
+        ])
+        setSong(songData.song)
+        setPlaylists(playlistsData.playlists || [])
+      }
     } catch (error) {
       showToast('Failed to load song data', 'error')
     } finally {
@@ -281,63 +289,65 @@ export default function SongDetailPage() {
             </div>
           </CardContent>
           {/* Audio Player - moved inside the card */}
-          <div className="mt-8 pb-8 px-6">
-            <div className="flex flex-col items-center gap-6">
-              {/* Progress Bar */}
-              <div className="w-full max-w-lg space-y-3">
-                <label className="text-sm font-medium text-white mb-3 block">Progress: {playProgress}%</label>
-                <div className="relative">
-                  <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div 
-                      className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${playProgress}%` }}
-                    ></div>
+          {!label && (
+            <div className="mt-8 pb-8 px-6">
+              <div className="flex flex-col items-center gap-6">
+                {/* Progress Bar */}
+                <div className="w-full max-w-lg space-y-3">
+                  <label className="text-sm font-medium text-white mb-3 block">Progress: {playProgress}%</label>
+                  <div className="relative">
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div 
+                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                        style={{ width: `${playProgress}%` }}
+                      ></div>
+                    </div>
+                    <input
+                      type="range"
+                      min="0"
+                      max="100"
+                      value={playProgress}
+                      onChange={(e) => setPlayProgress(Number(e.target.value))}
+                      className="absolute inset-0 w-full h-2 opacity-0 cursor-pointer"
+                    />
                   </div>
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={playProgress}
-                    onChange={(e) => setPlayProgress(Number(e.target.value))}
-                    className="absolute inset-0 w-full h-2 opacity-0 cursor-pointer"
-                  />
                 </div>
-              </div>
-              {/* Control Buttons */}
-              <div className="flex flex-row items-center justify-center gap-4 mt-4">
-                <Button 
-                  onClick={handlePlay}
-                  className="btn-spotify"
-                  disabled={playProgress < 70}
-                >
-                  <Play className="w-4 h-4 mr-2" />
-                  Play
-                </Button>
-                <Button 
-                  onClick={() => setShowAddToPlaylist(true)}
-                  variant="outline"
-                  className="border-gray-700 text-white hover:bg-gray-800"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add to Playlist
-                </Button>
-                {user?.is_premium && (
+                {/* Control Buttons */}
+                <div className="flex flex-row items-center justify-center gap-4 mt-4">
                   <Button 
-                    onClick={() => setShowDownloadConfirm(true)}
+                    onClick={handlePlay}
+                    className="btn-spotify"
+                    disabled={playProgress < 70}
+                  >
+                    <Play className="w-4 h-4 mr-2" />
+                    Play
+                  </Button>
+                  <Button 
+                    onClick={() => setShowAddToPlaylist(true)}
                     variant="outline"
                     className="border-gray-700 text-white hover:bg-gray-800"
                   >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add to Playlist
                   </Button>
-                )}
+                  {user?.is_premium && (
+                    <Button 
+                      onClick={() => setShowDownloadConfirm(true)}
+                      variant="outline"
+                      className="border-gray-700 text-white hover:bg-gray-800"
+                    >
+                      <Download className="w-4 h-4 mr-2" />
+                      Download
+                    </Button>
+                  )}
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </Card>
 
         {/* Add to Playlist Modal */}
-        {showAddToPlaylist && (
+        {showAddToPlaylist && !label && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60">
             <Card className="w-full max-w-md bg-gray-900/90 border-0 shadow-2xl">
               <CardHeader>
@@ -396,25 +406,29 @@ export default function SongDetailPage() {
         )}
 
         {/* Confirmation Modals */}
-        <ConfirmationModal
-          isOpen={showDownloadConfirm}
-          onClose={() => setShowDownloadConfirm(false)}
-          onConfirm={handleDownload}
-          title="Download Song"
-          message={`Are you sure you want to download \"${song?.judul}\" by ${song?.artist}?`}
-          type="download"
-          confirmText="Download"
-        />
+        {!label && (
+          <>
+            <ConfirmationModal
+              isOpen={showDownloadConfirm}
+              onClose={() => setShowDownloadConfirm(false)}
+              onConfirm={handleDownload}
+              title="Download Song"
+              message={`Are you sure you want to download \"${song?.judul}\" by ${song?.artist}?`}
+              type="download"
+              confirmText="Download"
+            />
 
-        <ConfirmationModal
-          isOpen={showAddToPlaylistConfirm}
-          onClose={() => setShowAddToPlaylistConfirm(false)}
-          onConfirm={handleAddToPlaylistConfirm}
-          title="Add to Playlist"
-          message={`Are you sure you want to add \"${song?.judul}\" to \"${playlists.find(p => p.id === selectedPlaylist)?.judul}\"?`}
-          type="add"
-          confirmText="Add to Playlist"
-        />
+            <ConfirmationModal
+              isOpen={showAddToPlaylistConfirm}
+              onClose={() => setShowAddToPlaylistConfirm(false)}
+              onConfirm={handleAddToPlaylistConfirm}
+              title="Add to Playlist"
+              message={`Are you sure you want to add \"${song?.judul}\" to \"${playlists.find(p => p.id === selectedPlaylist)?.judul}\"?`}
+              type="add"
+              confirmText="Add to Playlist"
+            />
+          </>
+        )}
       </div>
     </div>
   )

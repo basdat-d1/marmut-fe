@@ -272,7 +272,7 @@ export const albumAPI = {
   },
 
   async getLabelAlbums() {
-    return apiRequest('/api/album-song/albums/')
+    return apiRequest('/api/album-song/label-albums/')
   },
 
   async getAllLabels() {
