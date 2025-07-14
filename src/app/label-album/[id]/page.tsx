@@ -178,7 +178,7 @@ export default function LabelAlbumDetailPage() {
               <CardTitle className="text-white flex items-center">
                 <Music className="w-5 h-5 mr-2 text-green-400" />
                 Songs in this Album
-              </CardTitle>
+            </CardTitle>
               <Button
                 variant="outline"
                 onClick={() => router.push('/label-album')}
@@ -201,27 +201,27 @@ export default function LabelAlbumDetailPage() {
                 </p>
               </div>
             ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-800/50">
-                    <tr>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead className="bg-gray-800/50">
+                  <tr>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Title</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Artist</th>
                       <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Duration</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Total Play</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Total Download</th>
-                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-800">
-                    {songs.map((song) => (
-                      <tr key={song.id} className="hover:bg-gray-800/30 transition-colors">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Total Play</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Total Download</th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-gray-800">
+                  {songs.map((song) => (
+                    <tr key={song.id} className="hover:bg-gray-800/30 transition-colors">
                         <td className="px-6 py-4 whitespace-nowrap text-white font-medium">{song.judul}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-300">{song.artist}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-gray-300">{song.durasi} minutes</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-300">{song.total_play}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-gray-300">{song.total_download}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-300">{song.total_play}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-gray-300">{song.total_download}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                           <div className="flex items-center space-x-2">
                             <Button
                               size="sm"
@@ -231,7 +231,7 @@ export default function LabelAlbumDetailPage() {
                             >
                               <Eye className="w-4 h-4 mr-1" />
                               View Detail
-                            </Button>
+                          </Button>
                             <Button
                               size="sm"
                               variant="outline"
@@ -239,30 +239,30 @@ export default function LabelAlbumDetailPage() {
                               onClick={() => handleDeleteSong(song.id, song.judul)}
                             >
                               <Trash2 className="w-4 h-4 mr-1" />
-                              Delete
-                            </Button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+                            Delete
+                          </Button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
             )}
           </CardContent>
         </Card>
       </div>
 
       {/* Delete Confirmation Modal */}
-      <ConfirmationModal
+        <ConfirmationModal
         isOpen={deleteModal.isOpen}
         onClose={closeDeleteModal}
         onConfirm={confirmDeleteSong}
-        title="Delete Song"
+          title="Delete Song"
         message={`Are you sure you want to delete "${deleteModal.songTitle}"? This action cannot be undone.`}
-        type="delete"
-        confirmText="Delete Song"
-      />
+          type="delete"
+          confirmText="Delete Song"
+        />
     </div>
   )
 } 

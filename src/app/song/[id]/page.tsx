@@ -288,61 +288,61 @@ export default function SongDetailPage() {
               </div>
             </div>
           </CardContent>
-          {/* Audio Player - moved inside the card */}
+
           {!label && (
-            <div className="mt-8 pb-8 px-6">
-              <div className="flex flex-col items-center gap-6">
-                {/* Progress Bar */}
-                <div className="w-full max-w-lg space-y-3">
-                  <label className="text-sm font-medium text-white mb-3 block">Progress: {playProgress}%</label>
-                  <div className="relative">
-                    <div className="w-full bg-gray-700 rounded-full h-2">
-                      <div 
-                        className="bg-green-500 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${playProgress}%` }}
-                      ></div>
-                    </div>
-                    <input
-                      type="range"
-                      min="0"
-                      max="100"
-                      value={playProgress}
-                      onChange={(e) => setPlayProgress(Number(e.target.value))}
-                      className="absolute inset-0 w-full h-2 opacity-0 cursor-pointer"
-                    />
+          <div className="mt-8 pb-8 px-6">
+            <div className="flex flex-col items-center gap-6">
+              {/* Progress Bar */}
+              <div className="w-full max-w-lg space-y-3">
+                <label className="text-sm font-medium text-white mb-3 block">Progress: {playProgress}%</label>
+                <div className="relative">
+                  <div className="w-full bg-gray-700 rounded-full h-2">
+                    <div 
+                      className="bg-green-500 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${playProgress}%` }}
+                    ></div>
                   </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={playProgress}
+                    onChange={(e) => setPlayProgress(Number(e.target.value))}
+                    className="absolute inset-0 w-full h-2 opacity-0 cursor-pointer"
+                  />
                 </div>
-                {/* Control Buttons */}
-                <div className="flex flex-row items-center justify-center gap-4 mt-4">
+              </div>
+              {/* Control Buttons */}
+              <div className="flex flex-row items-center justify-center gap-4 mt-4">
+                <Button 
+                  onClick={handlePlay}
+                  className="btn-spotify"
+                  disabled={playProgress < 70}
+                >
+                  <Play className="w-4 h-4 mr-2" />
+                  Play
+                </Button>
+                <Button 
+                  onClick={() => setShowAddToPlaylist(true)}
+                  variant="outline"
+                  className="border-gray-700 text-white hover:bg-gray-800"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Add to Playlist
+                </Button>
+                {user?.is_premium && (
                   <Button 
-                    onClick={handlePlay}
-                    className="btn-spotify"
-                    disabled={playProgress < 70}
-                  >
-                    <Play className="w-4 h-4 mr-2" />
-                    Play
-                  </Button>
-                  <Button 
-                    onClick={() => setShowAddToPlaylist(true)}
+                    onClick={() => setShowDownloadConfirm(true)}
                     variant="outline"
                     className="border-gray-700 text-white hover:bg-gray-800"
                   >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Add to Playlist
+                    <Download className="w-4 h-4 mr-2" />
+                    Download
                   </Button>
-                  {user?.is_premium && (
-                    <Button 
-                      onClick={() => setShowDownloadConfirm(true)}
-                      variant="outline"
-                      className="border-gray-700 text-white hover:bg-gray-800"
-                    >
-                      <Download className="w-4 h-4 mr-2" />
-                      Download
-                    </Button>
-                  )}
-                </div>
+                )}
               </div>
             </div>
+          </div>
           )}
         </Card>
 
@@ -408,25 +408,25 @@ export default function SongDetailPage() {
         {/* Confirmation Modals */}
         {!label && (
           <>
-            <ConfirmationModal
-              isOpen={showDownloadConfirm}
-              onClose={() => setShowDownloadConfirm(false)}
-              onConfirm={handleDownload}
-              title="Download Song"
-              message={`Are you sure you want to download \"${song?.judul}\" by ${song?.artist}?`}
-              type="download"
-              confirmText="Download"
-            />
+        <ConfirmationModal
+          isOpen={showDownloadConfirm}
+          onClose={() => setShowDownloadConfirm(false)}
+          onConfirm={handleDownload}
+          title="Download Song"
+          message={`Are you sure you want to download \"${song?.judul}\" by ${song?.artist}?`}
+          type="download"
+          confirmText="Download"
+        />
 
-            <ConfirmationModal
-              isOpen={showAddToPlaylistConfirm}
-              onClose={() => setShowAddToPlaylistConfirm(false)}
-              onConfirm={handleAddToPlaylistConfirm}
-              title="Add to Playlist"
-              message={`Are you sure you want to add \"${song?.judul}\" to \"${playlists.find(p => p.id === selectedPlaylist)?.judul}\"?`}
-              type="add"
-              confirmText="Add to Playlist"
-            />
+        <ConfirmationModal
+          isOpen={showAddToPlaylistConfirm}
+          onClose={() => setShowAddToPlaylistConfirm(false)}
+          onConfirm={handleAddToPlaylistConfirm}
+          title="Add to Playlist"
+          message={`Are you sure you want to add \"${song?.judul}\" to \"${playlists.find(p => p.id === selectedPlaylist)?.judul}\"?`}
+          type="add"
+          confirmText="Add to Playlist"
+        />
           </>
         )}
       </div>
