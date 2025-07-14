@@ -36,7 +36,6 @@ export default function SubscriptionPage() {
   const { showToast } = useToast()
   const router = useRouter()
   const [packages, setPackages] = useState<Package[]>([])
-  const [transactions, setTransactions] = useState<Transaction[]>([])
   const [currentSubscription, setCurrentSubscription] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const [showPaymentModal, setShowPaymentModal] = useState(false)

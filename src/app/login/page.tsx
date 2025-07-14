@@ -29,7 +29,14 @@ export default function LoginPage() {
   }, [user, label, loading, router, redirecting])
 
   if (user || label) {
-    return null
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-gray-900 via-black to-gray-900 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-500 mx-auto"></div>
+          <p className="mt-4 text-gray-400">Redirecting to dashboard...</p>
+        </div>
+      </div>
+    )
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -37,7 +44,6 @@ export default function LoginPage() {
     setLoadingForm(true)
     try {
       await login(formData.email, formData.password)
-      // Jangan langsung router.push di sini, biarkan useEffect yang handle redirect
     } catch (error: any) {
       showToast(error.message || 'Login failed. Please check your credentials.', 'error')
     } finally {

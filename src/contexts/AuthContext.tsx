@@ -99,7 +99,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response)
         setLabel(null)
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message && !error.message.includes('403')) {
+        console.error('Auth check error:', error)
+      }
       setUser(null)
       setLabel(null)
     } finally {
@@ -121,8 +124,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setUser(response)
         setLabel(null)
       }
-    } catch (error) {
+    } catch (error: any) {
+      if (error.message && !error.message.includes('403')) {
       console.error('Failed to refresh user:', error)
+      }
     }
   }
 

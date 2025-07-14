@@ -49,6 +49,9 @@ async function apiRequest(url: string, options: RequestInit = {}) {
     if (response.status === 401) {
       errorMessage = 'Incorrect email or password. Please enter the correct credentials.'
     } else if (response.status === 403) {
+      if (url.includes('/api/auth/me/')) {
+        throw new Error('403')
+      }
       errorMessage = 'Access denied. You do not have permission to perform this action.'
     } else if (response.status === 404) {
       errorMessage = 'Resource not found.'
