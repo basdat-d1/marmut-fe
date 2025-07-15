@@ -58,11 +58,11 @@ const PaymentModal: React.FC<PaymentModalProps> = ({
             <div className="bg-gray-800/50 p-4 rounded-lg">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <p className="text-sm text-gray-400">Jenis</p>
+                  <p className="text-sm text-gray-400">Type</p>
                   <p className="text-white font-medium">{selectedPackage.jenis}</p>
                 </div>
                 <div>
-                  <p className="text-sm text-gray-400">Harga</p>
+                  <p className="text-sm text-gray-400">Price</p>
                   <p className="text-white font-medium">{formatCurrency(selectedPackage.harga)}</p>
                 </div>
               </div>

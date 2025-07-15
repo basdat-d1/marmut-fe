@@ -45,14 +45,14 @@ export default function SubscriptionHistoryPage() {
         <Card className="bg-gray-900/50 border-gray-800">
           <CardHeader>
             <div className="flex items-center justify-between">
-              <CardTitle className="text-white">Riwayat Transaksi Paket</CardTitle>
+              <CardTitle className="text-white">Subscription Transaction History</CardTitle>
               <Button
                 onClick={() => router.push('/subscription')}
                 variant="outline"
                 className="border-gray-700 text-white hover:bg-gray-800"
               >
                 <ArrowLeft className="w-4 h-4 mr-2" />
-                Kembali
+                Back
               </Button>
             </div>
           </CardHeader>
@@ -73,11 +73,11 @@ export default function SubscriptionHistoryPage() {
                 <table className="w-full">
                   <thead className="bg-gray-800/50">
                     <tr>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Jenis</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Tanggal Dimulai</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Tanggal Berakhir</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Metode Pembayaran</th>
-                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Nominal</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Type</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Start Date</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">End Date</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Payment Method</th>
+                      <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Amount</th>
                       <th className="px-6 py-3 text-center text-xs font-medium text-gray-400 uppercase tracking-wider">Status</th>
                     </tr>
                   </thead>
@@ -90,7 +90,7 @@ export default function SubscriptionHistoryPage() {
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">{transaction.metode_bayar}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">{transaction.nominal_formatted}</td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-300 text-center">
-                          <span className={`px-2 py-1 rounded-full text-xs ${transaction.status === 'Aktif' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>{transaction.status}</span>
+                          <span className={`px-2 py-1 rounded-full text-xs ${transaction.status === 'Active' ? 'bg-green-500/20 text-green-400' : 'bg-gray-500/20 text-gray-400'}`}>{transaction.status}</span>
                         </td>
                       </tr>
                     ))}
